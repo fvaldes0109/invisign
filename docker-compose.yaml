@@ -1,0 +1,10 @@
+services:
+  marking-module:
+    build:
+      context: ./marking-module
+      dockerfile: Dockerfile
+    container_name: marking_module_container
+    volumes:
+      - ./marking-module:/app
+    environment:
+      - DEBUG=true
