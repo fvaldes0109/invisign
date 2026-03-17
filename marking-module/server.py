@@ -1,5 +1,6 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import Response
+from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import cv2
 
@@ -8,6 +9,14 @@ from controllers import engrave_mask_controller
 from controllers import extract_mask_controller
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/engrave")
 async def engrave_images(image: UploadFile = File(...), watermark: UploadFile = File(...)):

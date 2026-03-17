@@ -1,0 +1,33 @@
+.app-layout {
+    font-family: system-ui, -apple-system, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.forms-wrapper {
+    display: flex;
+    gap: 2rem;
+    justify-content: space-between;
+}
+
+.form-container {
+    flex: 1;
+    padding: 2rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+form div {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.result img {
+    max-width: 100%;
+    border-radius: 4px;
+    margin-top: 1rem;
+}
