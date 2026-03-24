@@ -5,13 +5,42 @@ services:
     ports:
       - "${API_PORT:-8000}:${API_PORT:-8000}"
 
+  laravel:
+    build: ./laravel-backend
+    env_file: ./laravel-backend/.env
+    environment:
+      - DB_HOST=db
+      - DB_PORT=3306
+    ports:
+      - "${LARAVEL_PORT:-8080}:8080"
+    depends_on:
+      - db
+
+  db:
+    image: mariadb:11
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${DB_DATABASE}
+      - MARIADB_USER=${DB_USERNAME}
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+
   frontend:
     build: ./react-front
     env_file: ./react-front/.env
     environment:
       - VITE_API_HOST=http://localhost
       - VITE_API_PORT=${API_PORT:-8000}
+      - VITE_LARAVEL_HOST=http://localhost
+      - VITE_LARAVEL_PORT=${LARAVEL_PORT:-8080}
     ports:
       - "${VITE_DEV_PORT:-5173}:${VITE_DEV_PORT:-5173}"
     depends_on:
       - backend
+      - laravel
+
+volumes:
+  db_data:
