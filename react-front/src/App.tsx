@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
+import {MainPage} from "./pages/MainPage.tsx";
+import {NotFoundPage} from "./pages/NotFoundPage.tsx";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('token');
@@ -21,7 +23,8 @@ function App() {
                     </ProtectedRoute>
                 }
             />
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<MainPage />} />
+            <Route path="*" element={<NotFoundPage />} />
         </Routes>
     );
 }
