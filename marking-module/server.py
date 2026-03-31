@@ -18,6 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+async def health_check():
+    return {"status": "ok", "message": "Watermarking service is healthy."}
+
 @app.post("/engrave")
 async def engrave_images(image: UploadFile = File(...), watermark: UploadFile = File(...)):
     try:
@@ -59,6 +63,6 @@ async def extract_images(marked_image: UploadFile = File(...), original_image: U
 
 if __name__ == "__main__":
     import os
-    host = os.getenv("API_HOST", "0.0.0.0")
-    port = int(os.getenv("API_PORT", "8000"))
+    host = os.getenv("WATERMARK_SERVICE_HOST", "0.0.0.0")
+    port = int(os.getenv("WATERMARK_SERVICE_PORT", "8000"))
     uvicorn.run(app, host=host, port=port)

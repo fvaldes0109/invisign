@@ -1,11 +1,11 @@
-import { API_BASE_URL } from '../config';
+import { WATERMARK_SERVICE_URL } from '../config';
 
 export const engraveImages = async (image: File, watermark: File): Promise<string> => {
     const formData = new FormData();
     formData.append('image', image);
     formData.append('watermark', watermark);
 
-    const response = await fetch(`${API_BASE_URL}/engrave`, {
+    const response = await fetch(`${WATERMARK_SERVICE_URL}/engrave`, {
         method: 'POST',
         body: formData,
     });
@@ -24,7 +24,7 @@ export const extractImages = async (markedImage: File, originalImage: File, wate
     formData.append('original_image', originalImage);
     formData.append('watermark', watermark);
 
-    const response = await fetch(`${API_BASE_URL}/extract`, {
+    const response = await fetch(`${WATERMARK_SERVICE_URL}/extract`, {
         method: 'POST',
         body: formData,
     });

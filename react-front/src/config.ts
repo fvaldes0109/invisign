@@ -1,7 +1,7 @@
-export const API_HOST = import.meta.env.VITE_API_HOST || 'http://localhost';
-export const API_PORT = import.meta.env.VITE_API_PORT || '8000';
-export const API_BASE_URL = `${API_HOST}:${API_PORT}`;
+export const WATERMARK_SERVICE_HOST = import.meta.env.VITE_WATERMARK_SERVICE_HOST || 'http://localhost';
+export const WATERMARK_SERVICE_PORT = import.meta.env.VITE_WATERMARK_SERVICE_PORT || '8000';
+export const WATERMARK_SERVICE_URL = `${WATERMARK_SERVICE_HOST}:${WATERMARK_SERVICE_PORT}`;
 
-export const LARAVEL_HOST = import.meta.env.VITE_LARAVEL_HOST || 'http://localhost';
-export const LARAVEL_PORT = import.meta.env.VITE_LARAVEL_PORT || '8080';
-export const LARAVEL_BASE_URL = `${LARAVEL_HOST}:${LARAVEL_PORT}`;
+export const BACKEND_HOST = import.meta.env.VITE_BACKEND_HOST || 'http://localhost';
+export const BACKEND_PORT = import.meta.env.VITE_BACKEND_PORT || '8080';
+export const BACKEND_URL = `${BACKEND_HOST}:${BACKEND_PORT}`;
