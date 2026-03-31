@@ -16,6 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-EXPOSE ${API_PORT:-8000}
+EXPOSE ${APP_PORT:-8000}
 
-CMD ["python", "server.py"]
+CMD uvicorn server:app --reload --host ${WATERMARK_SERVICE_HOST:-0.0.0.0} --port ${WATERMARK_SERVICE_PORT:-8000}

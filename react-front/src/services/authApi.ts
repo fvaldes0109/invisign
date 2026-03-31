@@ -1,6 +1,6 @@
-import { LARAVEL_BASE_URL } from '../config';
+import { BACKEND_URL } from '../config';
 
-const BASE = `${LARAVEL_BASE_URL}/api/auth`;
+const BASE = `${BACKEND_URL}/api/auth`;
 
 export interface AuthUser {
     id: number;
