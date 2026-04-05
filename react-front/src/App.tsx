@@ -2,8 +2,11 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
-import {MainPage} from "./pages/MainPage.tsx";
-import {NotFoundPage} from "./pages/NotFoundPage.tsx";
+import { WatermarksPage } from './pages/WatermarksPage';
+import { EmbedPage } from './pages/EmbedPage';
+import { ExtractPage } from './pages/ExtractPage';
+import { MainPage } from './pages/MainPage.tsx';
+import { NotFoundPage } from './pages/NotFoundPage.tsx';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('token');
@@ -20,6 +23,30 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <DashboardPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/dashboard/watermarks"
+                element={
+                    <ProtectedRoute>
+                        <WatermarksPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/dashboard/embed"
+                element={
+                    <ProtectedRoute>
+                        <EmbedPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/dashboard/extract"
+                element={
+                    <ProtectedRoute>
+                        <ExtractPage />
                     </ProtectedRoute>
                 }
             />
