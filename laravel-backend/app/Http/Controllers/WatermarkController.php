@@ -46,11 +46,13 @@ class WatermarkController extends Controller
     {
         $request->validate([
             'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:51200',
+            'name'  => 'required|string|max:255',
         ]);
 
         $watermark = $this->createWatermark->execute(
             userId: $request->user()->id,
             file:   $request->file('image'),
+            name:   $request->input('name'),
         );
 
         return new WatermarkResource($watermark);

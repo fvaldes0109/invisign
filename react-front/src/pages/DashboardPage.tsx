@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../services/authApi';
+import { fetchWatermarkCount, fetchWatermarks } from '../services/watermarkApi';
 
 const c = {
     bg: '#07090F',
@@ -14,7 +16,6 @@ const c = {
     textMuted: '#94A3B8',
     textDim: '#64748B',
     success: '#10B981',
-    warning: '#F59E0B',
 };
 
 const s: Record<string, React.CSSProperties> = {
@@ -26,8 +27,6 @@ const s: Record<string, React.CSSProperties> = {
         display: 'flex',
         flexDirection: 'column',
     },
-
-    // ── Topbar ───────────────────────────────────────────────────────────────
     topbar: {
         display: 'flex',
         alignItems: 'center',
@@ -102,19 +101,15 @@ const s: Record<string, React.CSSProperties> = {
         fontWeight: 500,
         cursor: 'pointer',
     },
-
-    // ── Main content ─────────────────────────────────────────────────────────
     main: {
         flex: 1,
-        padding: '2.5rem 2.5rem',
+        padding: '2.5rem',
         maxWidth: 1280,
         width: '100%',
         margin: '0 auto',
         boxSizing: 'border-box',
     },
-    pageHeader: {
-        marginBottom: '2.5rem',
-    },
+    pageHeader: { marginBottom: '2.5rem' },
     pageLabel: {
         fontSize: '0.75rem',
         fontWeight: 700,
@@ -129,12 +124,8 @@ const s: Record<string, React.CSSProperties> = {
         letterSpacing: '-0.03em',
         margin: '0 0 0.4rem',
     },
-    pageSub: {
-        fontSize: '0.9rem',
-        color: c.textMuted,
-    },
+    pageSub: { fontSize: '0.9rem', color: c.textMuted },
 
-    // ── Stats row ────────────────────────────────────────────────────────────
     statsRow: {
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
@@ -163,12 +154,8 @@ const s: Record<string, React.CSSProperties> = {
         letterSpacing: '-0.04em',
         color: c.text,
     },
-    statSub: {
-        fontSize: '0.78rem',
-        color: c.textMuted,
-    },
+    statSub: { fontSize: '0.78rem', color: c.textMuted },
 
-    // ── Cards grid ───────────────────────────────────────────────────────────
     cardsGrid: {
         display: 'grid',
         gridTemplateColumns: 'repeat(3, 1fr)',
@@ -183,7 +170,6 @@ const s: Record<string, React.CSSProperties> = {
         flexDirection: 'column',
         textDecoration: 'none',
         color: c.text,
-        transition: 'border-color 0.2s, transform 0.2s',
     },
     cardAccentBar: (color: string): React.CSSProperties => ({
         height: 3,
@@ -207,11 +193,7 @@ const s: Record<string, React.CSSProperties> = {
         fontSize: '1.3rem',
         marginBottom: '1.1rem',
     }),
-    cardTitle: {
-        fontSize: '1.05rem',
-        fontWeight: 700,
-        marginBottom: '0.4rem',
-    },
+    cardTitle: { fontSize: '1.05rem', fontWeight: 700, marginBottom: '0.4rem' },
     cardDesc: {
         fontSize: '0.85rem',
         color: c.textMuted,
@@ -219,37 +201,26 @@ const s: Record<string, React.CSSProperties> = {
         marginBottom: '1.4rem',
     },
 
-    // ── Thumbnail strip ──────────────────────────────────────────────────────
     thumbStrip: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        display: 'flex',
         gap: '0.5rem',
         marginBottom: '1.4rem',
     },
-    thumb: (i: number): React.CSSProperties => ({
+    thumb: {
+        flex: '0 0 calc(25% - 0.375rem)',
         aspectRatio: '1',
         borderRadius: 8,
-        background: [
-            `linear-gradient(135deg, #1a2040, #0d1530)`,
-            `linear-gradient(135deg, #1a2840, #0a1a2e)`,
-            `linear-gradient(135deg, #1e1a40, #120d30)`,
-            `linear-gradient(135deg, #1a3040, #0d2030)`,
-        ][i % 4],
+        overflow: 'hidden',
         border: `1px solid ${c.border}`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '1.1rem',
-        color: c.textDim,
-    }),
-    thumbLabel: {
-        fontSize: '0.7rem',
-        color: c.textDim,
-        marginBottom: '1rem',
-        fontStyle: 'italic',
+        background: c.surfaceAlt,
+    },
+    thumbImg: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        display: 'block',
     },
 
-    // ── Card CTA ─────────────────────────────────────────────────────────────
     cardCta: (color: string): React.CSSProperties => ({
         display: 'flex',
         alignItems: 'center',
@@ -265,42 +236,59 @@ const s: Record<string, React.CSSProperties> = {
     }),
 };
 
-const stats = [
-    { label: 'Total watermarks', value: '0', sub: 'Embed your first image' },
-    { label: 'Extractions run', value: '0', sub: 'No extractions yet' },
-    { label: 'Images protected', value: '0', sub: 'Upload to get started' },
-];
+interface HasThumbnail {
+    id: string;
+    thumbnail_url: string;
+    name: string;
+}
 
-const THUMB_ICONS = ['🖼️', '📷', '🌆', '🎨'];
+interface ThumbStripProps {
+    items: HasThumbnail[];
+}
 
-function ThumbStrip() {
+function ThumbStrip({ items }: ThumbStripProps) {
+    const recent = items.slice(0, 4);
+    if (recent.length === 0) return null;
     return (
-        <>
-            <div style={s.thumbStrip}>
-                {THUMB_ICONS.map((icon, i) => (
-                    <div key={i} style={s.thumb(i)}>{icon}</div>
-                ))}
-            </div>
-            <p style={s.thumbLabel}>4 most recent — placeholder</p>
-        </>
+        <div style={s.thumbStrip}>
+            {recent.map(w => (
+                <div key={w.id} style={s.thumb}>
+                    <img src={w.thumbnail_url} alt={w.name} style={s.thumbImg} />
+                </div>
+            ))}
+        </div>
     );
 }
 
 export function DashboardPage() {
     const navigate = useNavigate();
+    const [count, setCount] = useState<number | null>(null);
+    const [recentWatermarks, setRecentWatermarks] = useState<HasThumbnail[]>([]);
+
+    useEffect(() => {
+        fetchWatermarkCount().then(setCount).catch(() => setCount(0));
+        fetchWatermarks().then(list => setRecentWatermarks(list.slice(0, 4))).catch(() => {});
+    }, []);
 
     async function handleLogout() {
-        try {
-            await logout();
-        } finally {
+        try { await logout(); } finally {
             localStorage.removeItem('token');
             navigate('/login');
         }
     }
 
+    const stats = [
+        {
+            label: 'Total watermarks',
+            value: count === null ? '—' : String(count),
+            sub: count === 0 ? 'Embed your first image' : `${count} image${count === 1 ? '' : 's'} protected`,
+        },
+        { label: 'Images protected', value: '0', sub: 'Upload to get started' },
+        { label: 'Extractions run', value: '0', sub: 'No extractions yet' },
+    ];
+
     return (
         <div style={s.page}>
-            {/* ── Topbar ── */}
             <header style={s.topbar}>
                 <Link to="/" style={s.logoLink}>
                     <div style={s.logoMark}>W</div>
@@ -315,7 +303,6 @@ export function DashboardPage() {
                 </div>
             </header>
 
-            {/* ── Main ── */}
             <main style={s.main}>
                 <div style={s.pageHeader}>
                     <div style={s.pageLabel}>Overview</div>
@@ -323,7 +310,6 @@ export function DashboardPage() {
                     <p style={s.pageSub}>Manage your watermarks, protect new images, and verify ownership.</p>
                 </div>
 
-                {/* Stats */}
                 <div style={s.statsRow}>
                     {stats.map(st => (
                         <div key={st.label} style={s.statCard}>
@@ -334,10 +320,7 @@ export function DashboardPage() {
                     ))}
                 </div>
 
-                {/* Action cards */}
                 <div style={s.cardsGrid}>
-
-                    {/* 1 — My Watermarks */}
                     <Link to="/dashboard/watermarks" style={s.card}>
                         <div style={s.cardAccentBar(`linear-gradient(90deg, ${c.primary}, ${c.primaryLight})`)} />
                         <div style={s.cardBody}>
@@ -347,7 +330,7 @@ export function DashboardPage() {
                                 Browse and manage all your watermarked images. Review embedded
                                 payloads, download protected files, or remove entries.
                             </div>
-                            <ThumbStrip />
+                            <ThumbStrip items={recentWatermarks} />
                             <div style={s.cardCta(c.primaryLight)}>
                                 <span>View all watermarks</span>
                                 <span>→</span>
@@ -355,7 +338,6 @@ export function DashboardPage() {
                         </div>
                     </Link>
 
-                    {/* 2 — Embed watermark */}
                     <Link to="/dashboard/embed" style={s.card}>
                         <div style={s.cardAccentBar(`linear-gradient(90deg, ${c.accent}, #38BDF8)`)} />
                         <div style={s.cardBody}>
@@ -365,7 +347,7 @@ export function DashboardPage() {
                                 Upload an image and a watermark pattern. We'll invisibly encode
                                 the mark and return a protected file that looks identical to the original.
                             </div>
-                            <ThumbStrip />
+                            <ThumbStrip items={[]} />
                             <div style={s.cardCta(c.accent)}>
                                 <span>Upload & embed</span>
                                 <span>→</span>
@@ -373,7 +355,6 @@ export function DashboardPage() {
                         </div>
                     </Link>
 
-                    {/* 3 — Extract watermark */}
                     <Link to="/dashboard/extract" style={s.card}>
                         <div style={s.cardAccentBar(`linear-gradient(90deg, ${c.success}, #34D399)`)} />
                         <div style={s.cardBody}>
@@ -390,7 +371,6 @@ export function DashboardPage() {
                             </div>
                         </div>
                     </Link>
-
                 </div>
             </main>
         </div>

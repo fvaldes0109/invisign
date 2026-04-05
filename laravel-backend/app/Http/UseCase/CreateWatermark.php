@@ -16,7 +16,7 @@ class CreateWatermark
     ) {
     }
 
-    public function execute(int $userId, UploadedFile $file): Watermark
+    public function execute(int $userId, UploadedFile $file, string $name): Watermark
     {
         $id  = Uuid::uuid4()->toString();
         $ext = strtolower($file->getClientOriginalExtension());
@@ -30,7 +30,7 @@ class CreateWatermark
         $watermark = Watermark::create(
             id:            $id,
             userId:        $userId,
-            name:          $file->getClientOriginalName(),
+            name:          $name,
             imagePath:     $imagePath,
             thumbnailPath: $thumbnailPath,
         );
