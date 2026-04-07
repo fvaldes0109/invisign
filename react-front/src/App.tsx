@@ -4,8 +4,10 @@ import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { WatermarksPage } from './pages/WatermarksPage';
 import { ImagesPage } from './pages/ImagesPage';
+import { EngravingResultPage } from './pages/EngravingResultPage';
 import { EmbedPage } from './pages/EmbedPage';
 import { ExtractPage } from './pages/ExtractPage';
+import { EngravingsPage } from './pages/EngravingsPage';
 import { MainPage } from './pages/MainPage.tsx';
 import { NotFoundPage } from './pages/NotFoundPage.tsx';
 
@@ -40,6 +42,22 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <ImagesPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/dashboard/engravings"
+                element={
+                    <ProtectedRoute>
+                        <EngravingsPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/dashboard/engravings/:id"
+                element={
+                    <ProtectedRoute>
+                        <EngravingResultPage />
                     </ProtectedRoute>
                 }
             />

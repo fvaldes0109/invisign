@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../services/authApi';
 import { fetchWatermarkCount, fetchWatermarks } from '../services/watermarkApi';
 import { fetchImageCount, fetchImages } from '../services/imageApi';
+import { fetchEngravings } from '../services/engravingApi';
 
 const c = {
     bg: '#07090F',
@@ -129,7 +130,7 @@ const s: Record<string, React.CSSProperties> = {
 
     statsRow: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '1rem',
         marginBottom: '2.5rem',
     },
@@ -159,7 +160,7 @@ const s: Record<string, React.CSSProperties> = {
 
     cardsGrid: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '1.5rem',
     },
     card: {
@@ -265,6 +266,7 @@ export function DashboardPage() {
     const navigate = useNavigate();
     const [watermarkCount, setWatermarkCount] = useState<number | null>(null);
     const [imageCount, setImageCount] = useState<number | null>(null);
+    const [engravingCount, setEngravingCount] = useState<number | null>(null);
     const [recentWatermarks, setRecentWatermarks] = useState<HasThumbnail[]>([]);
     const [recentImages, setRecentImages] = useState<HasThumbnail[]>([]);
 
@@ -273,6 +275,7 @@ export function DashboardPage() {
         fetchWatermarks().then(list => setRecentWatermarks(list.slice(0, 4))).catch(() => {});
         fetchImageCount().then(setImageCount).catch(() => setImageCount(0));
         fetchImages().then(list => setRecentImages(list.slice(0, 4))).catch(() => {});
+        fetchEngravings().then(list => setEngravingCount(list.length)).catch(() => setEngravingCount(0));
     }, []);
 
     async function handleLogout() {
@@ -292,6 +295,11 @@ export function DashboardPage() {
             label: 'Images uploaded',
             value: imageCount === null ? '—' : String(imageCount),
             sub: imageCount === 0 ? 'Upload to get started' : `${imageCount} image${imageCount === 1 ? '' : 's'} ready to protect`,
+        },
+        {
+            label: 'Engravings done',
+            value: engravingCount === null ? '—' : String(engravingCount),
+            sub: engravingCount === 0 ? 'No engravings yet' : `${engravingCount} engraving${engravingCount === 1 ? '' : 's'} created`,
         },
         { label: 'Extractions run', value: '0', sub: 'No extractions yet' },
     ];
@@ -359,6 +367,22 @@ export function DashboardPage() {
                             <ThumbStrip items={recentImages} />
                             <div style={s.cardCta(c.accent)}>
                                 <span>View all images</span>
+                                <span>→</span>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link to="/dashboard/engravings" style={s.card}>
+                        <div style={s.cardAccentBar(`linear-gradient(90deg, #F59E0B, #FCD34D)`)} />
+                        <div style={s.cardBody}>
+                            <div style={s.cardIconWrap('#F59E0B')}>🖨️</div>
+                            <div style={s.cardTitle}>My Engravings</div>
+                            <div style={s.cardDesc}>
+                                Browse all images you've engraved with watermarks. Filter by
+                                image or watermark and revisit any result.
+                            </div>
+                            <div style={s.cardCta('#F59E0B')}>
+                                <span>View all engravings</span>
                                 <span>→</span>
                             </div>
                         </div>

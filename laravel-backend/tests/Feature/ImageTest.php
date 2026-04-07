@@ -11,8 +11,6 @@ use Tests\TestCase;
 
 class ImageTest extends TestCase
 {
-    use RefreshDatabase;
-
     // ── Count ────────────────────────────────────────────────────────────────
 
     public function test_count_returns_number_of_authenticated_users_images(): void

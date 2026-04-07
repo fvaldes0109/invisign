@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\MarkingModuleService;
+use App\Services\WatermarkingServiceInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +13,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(WatermarkingServiceInterface::class, function () {
+            return new MarkingModuleService(config('services.watermarking.url'));
+        });
     }
 
     /**

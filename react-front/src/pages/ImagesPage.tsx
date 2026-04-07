@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     deleteImage,
     fetchImages,
     uploadImage,
     type UserImage,
 } from '../services/imageApi';
+import { fetchWatermarks, type Watermark } from '../services/watermarkApi';
+import { createEngraving, fetchEngravings } from '../services/engravingApi';
 
 const c = {
     bg: '#07090F',
@@ -16,6 +18,7 @@ const c = {
     primaryLight: '#818CF8',
     primaryDark: '#4338CA',
     accent: '#06B6D4',
+    accentDark: '#0891B2',
     text: '#F1F5F9',
     textMuted: '#94A3B8',
     textDim: '#64748B',
@@ -127,7 +130,7 @@ const s: Record<string, React.CSSProperties> = {
         padding: '0.7rem 1.5rem',
         borderRadius: 10,
         border: 'none',
-        background: `linear-gradient(135deg, ${c.accent}, #0891B2)`,
+        background: `linear-gradient(135deg, ${c.accent}, ${c.accentDark})`,
         color: '#fff',
         fontWeight: 700,
         fontSize: '0.875rem',
@@ -157,11 +160,7 @@ const s: Record<string, React.CSSProperties> = {
         justifyContent: 'space-between',
         marginBottom: '1rem',
     },
-    listTitle: {
-        fontSize: '1rem',
-        fontWeight: 700,
-        color: c.text,
-    },
+    listTitle: { fontSize: '1rem', fontWeight: 700, color: c.text },
     listCount: {
         fontSize: '0.8rem',
         color: c.textDim,
@@ -170,8 +169,6 @@ const s: Record<string, React.CSSProperties> = {
         background: c.surfaceAlt,
         border: `1px solid ${c.border}`,
     },
-
-    // Empty state
     emptyState: {
         display: 'flex',
         flexDirection: 'column',
@@ -188,7 +185,74 @@ const s: Record<string, React.CSSProperties> = {
     emptyTitle: { fontSize: '1rem', fontWeight: 600, color: c.textMuted },
     emptyHint: { fontSize: '0.85rem', color: c.textDim },
 
-    // Modal
+    // ── Image grid ────────────────────────────────────────────────────────────
+    grid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
+        gap: '1rem',
+    },
+    imageCard: {
+        background: c.surface,
+        border: `1px solid ${c.border}`,
+        borderRadius: 14,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    thumbWrap: {
+        width: '100%',
+        aspectRatio: '16/9',
+        background: c.surfaceAlt,
+        overflow: 'hidden',
+    },
+    thumbImg: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        display: 'block',
+    },
+    cardInfo: {
+        padding: '0.75rem 1rem',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+    },
+    cardName: {
+        fontSize: '0.85rem',
+        fontWeight: 600,
+        color: c.text,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap',
+        flex: 1,
+        minWidth: 0,
+    },
+    engraveBtn: {
+        padding: '0.35rem 0.75rem',
+        borderRadius: 7,
+        border: `1px solid rgba(6,182,212,0.35)`,
+        background: 'rgba(6,182,212,0.1)',
+        color: c.accent,
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        flexShrink: 0,
+        whiteSpace: 'nowrap',
+    },
+    deleteBtn: {
+        padding: '0.35rem 0.75rem',
+        borderRadius: 7,
+        border: `1px solid rgba(248,113,113,0.3)`,
+        background: 'rgba(248,113,113,0.08)',
+        color: c.error,
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        flexShrink: 0,
+    },
+    btnDisabled: { opacity: 0.4, cursor: 'not-allowed' },
+
+    // ── Preview modal ─────────────────────────────────────────────────────────
     modalBackdrop: {
         position: 'fixed' as const,
         inset: 0,
@@ -219,7 +283,7 @@ const s: Record<string, React.CSSProperties> = {
         borderBottom: `1px solid ${c.border}`,
         gap: '1rem',
     },
-    modalName: {
+    modalTitle: {
         fontSize: '0.95rem',
         fontWeight: 700,
         color: c.text,
@@ -250,67 +314,120 @@ const s: Record<string, React.CSSProperties> = {
         objectFit: 'contain' as const,
     },
 
-    // Image grid
-    grid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
-        gap: '1rem',
-    },
-    imageCard: {
+    // ── Engrave modal ─────────────────────────────────────────────────────────
+    engraveModalBox: {
         background: c.surface,
         border: `1px solid ${c.border}`,
-        borderRadius: 14,
+        borderRadius: 18,
         overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-    },
-    thumbWrap: {
         width: '100%',
-        aspectRatio: '16/9',
+        maxWidth: 560,
+        maxHeight: '85vh',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
+    },
+    engraveModalBody: {
+        flex: 1,
+        overflowY: 'auto' as const,
+        padding: '1.25rem',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '1rem',
+    },
+    engraveModalSub: {
+        fontSize: '0.82rem',
+        color: c.textMuted,
+    },
+    wmGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
+        gap: '0.75rem',
+    },
+    wmItem: {
+        borderRadius: 10,
+        border: `1px solid ${c.border}`,
         background: c.surfaceAlt,
         overflow: 'hidden',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column' as const,
     },
-    thumbImg: {
+    wmItemSelected: {
+        border: `2px solid ${c.accent}`,
+        boxShadow: `0 0 0 3px rgba(6,182,212,0.2)`,
+    },
+    wmThumb: {
         width: '100%',
-        height: '100%',
-        objectFit: 'cover',
+        aspectRatio: '1',
+        objectFit: 'cover' as const,
         display: 'block',
     },
-    cardInfo: {
-        padding: '0.9rem 1rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '0.5rem',
-    },
-    cardName: {
-        fontSize: '0.85rem',
+    wmName: {
+        fontSize: '0.72rem',
         fontWeight: 600,
-        color: c.text,
+        color: c.textMuted,
+        padding: '0.4rem 0.5rem',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
-        whiteSpace: 'nowrap',
-        flex: 1,
-        minWidth: 0,
+        whiteSpace: 'nowrap' as const,
     },
-    deleteBtn: {
-        padding: '0.35rem 0.75rem',
-        borderRadius: 7,
-        border: `1px solid rgba(248,113,113,0.3)`,
-        background: 'rgba(248,113,113,0.08)',
+    modalFooter: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        gap: '0.75rem',
+        padding: '1rem 1.25rem',
+        borderTop: `1px solid ${c.border}`,
+    },
+    cancelBtn: {
+        padding: '0.6rem 1.2rem',
+        borderRadius: 9,
+        border: `1px solid ${c.border}`,
+        background: 'transparent',
+        color: c.textMuted,
+        fontSize: '0.875rem',
+        fontWeight: 500,
+        cursor: 'pointer',
+    },
+    confirmBtn: {
+        padding: '0.6rem 1.4rem',
+        borderRadius: 9,
+        border: 'none',
+        background: `linear-gradient(135deg, ${c.accent}, ${c.accentDark})`,
+        color: '#fff',
+        fontSize: '0.875rem',
+        fontWeight: 700,
+        cursor: 'pointer',
+        boxShadow: `0 0 16px rgba(6,182,212,0.35)`,
+    },
+    engraveError: {
+        padding: '0.65rem 1rem',
+        borderRadius: 8,
+        background: c.errorBg,
+        border: `1px solid ${c.errorBorder}`,
         color: c.error,
-        fontSize: '0.75rem',
+        fontSize: '0.82rem',
+    },
+    engravingsBadge: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.3rem',
+        padding: '0.2rem 0.55rem',
+        borderRadius: 100,
+        background: 'rgba(6,182,212,0.1)',
+        border: '1px solid rgba(6,182,212,0.25)',
+        color: c.accent,
+        fontSize: '0.7rem',
         fontWeight: 600,
         cursor: 'pointer',
         flexShrink: 0,
     },
-    deleteBtnDisabled: {
-        opacity: 0.4,
-        cursor: 'not-allowed',
-    },
 };
 
 export function ImagesPage() {
+    const navigate = useNavigate();
+
     const [images, setImages] = useState<UserImage[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
@@ -321,10 +438,28 @@ export function ImagesPage() {
     const [previewImage, setPreviewImage] = useState<UserImage | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Engrave modal state
+    const [engraveTarget, setEngraveTarget] = useState<UserImage | null>(null);
+    const [watermarks, setWatermarks] = useState<Watermark[]>([]);
+    const [loadingWatermarks, setLoadingWatermarks] = useState(false);
+    const [selectedWatermarkId, setSelectedWatermarkId] = useState<string | null>(null);
+    const [engraving, setEngraving] = useState(false);
+    const [engraveError, setEngraveError] = useState('');
+    const [engravingCounts, setEngravingCounts] = useState<Record<string, number>>({});
+
     useEffect(() => {
         fetchImages()
             .then(setImages)
             .finally(() => setLoading(false));
+        fetchEngravings()
+            .then(list => {
+                const counts: Record<string, number> = {};
+                for (const e of list) {
+                    counts[e.image_id] = (counts[e.image_id] ?? 0) + 1;
+                }
+                setEngravingCounts(counts);
+            })
+            .catch(() => {});
     }, []);
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -361,6 +496,43 @@ export function ImagesPage() {
         }
     }
 
+    async function openEngraveModal(img: UserImage) {
+        setEngraveTarget(img);
+        setSelectedWatermarkId(null);
+        setEngraveError('');
+        if (watermarks.length === 0) {
+            setLoadingWatermarks(true);
+            try {
+                const wm = await fetchWatermarks();
+                setWatermarks(wm);
+            } finally {
+                setLoadingWatermarks(false);
+            }
+        }
+    }
+
+    function closeEngraveModal() {
+        setEngraveTarget(null);
+        setEngraveError('');
+        setSelectedWatermarkId(null);
+    }
+
+    async function handleEngrave() {
+        if (!engraveTarget || !selectedWatermarkId) return;
+        setEngraving(true);
+        setEngraveError('');
+        try {
+            const engraving = await createEngraving(engraveTarget.id, selectedWatermarkId);
+            const watermark = watermarks.find(w => w.id === selectedWatermarkId)!;
+            navigate(`/dashboard/engravings/${engraving.id}`, {
+                state: { engraving, image: engraveTarget, watermark },
+            });
+        } catch {
+            setEngraveError('Engraving failed. Please try again.');
+            setEngraving(false);
+        }
+    }
+
     return (
         <div style={s.page}>
             <header style={s.topbar}>
@@ -373,10 +545,7 @@ export function ImagesPage() {
                 <div style={s.uploadCard}>
                     <div style={s.uploadCardTitle}>Upload a new image</div>
                     <div style={s.uploadRow}>
-                        <div
-                            style={s.uploadZone}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
+                        <div style={s.uploadZone} onClick={() => fileInputRef.current?.click()}>
                             <span style={s.uploadZoneIcon}>📂</span>
                             {selectedFile
                                 ? <span style={s.uploadZoneFilename}>{selectedFile.name}</span>
@@ -415,9 +584,7 @@ export function ImagesPage() {
                 <div>
                     <div style={s.listHeader}>
                         <span style={s.listTitle}>Your images</span>
-                        {!loading && (
-                            <span style={s.listCount}>{images.length} total</span>
-                        )}
+                        {!loading && <span style={s.listCount}>{images.length} total</span>}
                     </div>
 
                     {loading ? (
@@ -439,18 +606,31 @@ export function ImagesPage() {
                                         style={{ ...s.thumbWrap, cursor: 'pointer' }}
                                         onClick={() => setPreviewImage(img)}
                                     >
-                                        <img
-                                            src={img.thumbnail_url}
-                                            alt={img.name}
-                                            style={s.thumbImg}
-                                        />
+                                        <img src={img.thumbnail_url} alt={img.name} style={s.thumbImg} />
                                     </div>
                                     <div style={s.cardInfo}>
                                         <span style={s.cardName} title={img.name}>{img.name}</span>
+                                        <span
+                                            style={s.engravingsBadge}
+                                            onClick={() => navigate(`/dashboard/engravings?image_id=${img.id}`)}
+                                            title="View engravings of this image"
+                                        >
+                                            🖨️ {engravingCounts[img.id] ?? 0}
+                                        </span>
+                                        <button
+                                            style={{
+                                                ...s.engraveBtn,
+                                                ...(deletingId === img.id ? s.btnDisabled : {}),
+                                            }}
+                                            disabled={deletingId === img.id}
+                                            onClick={() => openEngraveModal(img)}
+                                        >
+                                            Engrave
+                                        </button>
                                         <button
                                             style={{
                                                 ...s.deleteBtn,
-                                                ...(deletingId === img.id ? s.deleteBtnDisabled : {}),
+                                                ...(deletingId === img.id ? s.btnDisabled : {}),
                                             }}
                                             disabled={deletingId === img.id}
                                             onClick={() => handleDelete(img.id)}
@@ -465,20 +645,75 @@ export function ImagesPage() {
                 </div>
             </main>
 
+            {/* ── Preview modal ── */}
             {previewImage && (
                 <div style={s.modalBackdrop} onClick={() => setPreviewImage(null)}>
                     <div style={s.modalBox} onClick={e => e.stopPropagation()}>
                         <div style={s.modalHeader}>
-                            <span style={s.modalName} title={previewImage.name}>
-                                {previewImage.name}
-                            </span>
+                            <span style={s.modalTitle} title={previewImage.name}>{previewImage.name}</span>
                             <button style={s.modalClose} onClick={() => setPreviewImage(null)}>✕</button>
                         </div>
-                        <img
-                            src={previewImage.image_url}
-                            alt={previewImage.name}
-                            style={s.modalImg}
-                        />
+                        <img src={previewImage.image_url} alt={previewImage.name} style={s.modalImg} />
+                    </div>
+                </div>
+            )}
+
+            {/* ── Engrave modal ── */}
+            {engraveTarget && (
+                <div style={s.modalBackdrop} onClick={closeEngraveModal}>
+                    <div style={s.engraveModalBox} onClick={e => e.stopPropagation()}>
+                        <div style={s.modalHeader}>
+                            <span style={s.modalTitle}>Engrave — {engraveTarget.name}</span>
+                            <button style={s.modalClose} onClick={closeEngraveModal}>✕</button>
+                        </div>
+
+                        <div style={s.engraveModalBody}>
+                            <span style={s.engraveModalSub}>Select a watermark pattern to embed invisibly into this image.</span>
+
+                            {loadingWatermarks ? (
+                                <div style={{ textAlign: 'center', padding: '2rem', color: c.textDim }}>
+                                    Loading watermarks…
+                                </div>
+                            ) : watermarks.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '2rem', color: c.textDim }}>
+                                    No watermarks yet. Upload one first.
+                                </div>
+                            ) : (
+                                <div style={s.wmGrid}>
+                                    {watermarks.map(wm => (
+                                        <div
+                                            key={wm.id}
+                                            style={{
+                                                ...s.wmItem,
+                                                ...(selectedWatermarkId === wm.id ? s.wmItemSelected : {}),
+                                            }}
+                                            onClick={() => setSelectedWatermarkId(wm.id)}
+                                        >
+                                            <img src={wm.thumbnail_url} alt={wm.name} style={s.wmThumb} />
+                                            <span style={s.wmName} title={wm.name}>{wm.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {engraveError && <div style={s.engraveError}>⚠ {engraveError}</div>}
+                        </div>
+
+                        <div style={s.modalFooter}>
+                            <button style={s.cancelBtn} onClick={closeEngraveModal} disabled={engraving}>
+                                Cancel
+                            </button>
+                            <button
+                                style={{
+                                    ...s.confirmBtn,
+                                    ...(!selectedWatermarkId || engraving ? s.btnDisabled : {}),
+                                }}
+                                disabled={!selectedWatermarkId || engraving}
+                                onClick={handleEngrave}
+                            >
+                                {engraving ? 'Engraving…' : 'Engrave'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

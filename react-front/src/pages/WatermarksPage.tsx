@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     deleteWatermark,
     fetchWatermarks,
     uploadWatermark,
     type Watermark,
 } from '../services/watermarkApi';
+import { fetchEngravings } from '../services/engravingApi';
 
 const c = {
     bg: '#07090F',
@@ -308,9 +309,25 @@ const s: Record<string, React.CSSProperties> = {
         opacity: 0.4,
         cursor: 'not-allowed',
     },
+    engravingsBadge: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.3rem',
+        padding: '0.2rem 0.55rem',
+        borderRadius: 100,
+        background: 'rgba(6,182,212,0.1)',
+        border: '1px solid rgba(6,182,212,0.25)',
+        color: c.accent,
+        fontSize: '0.7rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+        flexShrink: 0,
+        textDecoration: 'none',
+    },
 };
 
 export function WatermarksPage() {
+    const navigate = useNavigate();
     const [watermarks, setWatermarks] = useState<Watermark[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
@@ -319,12 +336,22 @@ export function WatermarksPage() {
     const [watermarkName, setWatermarkName] = useState('');
     const [uploadError, setUploadError] = useState('');
     const [previewWatermark, setPreviewWatermark] = useState<Watermark | null>(null);
+    const [engravingCounts, setEngravingCounts] = useState<Record<string, number>>({});
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchWatermarks()
             .then(setWatermarks)
             .finally(() => setLoading(false));
+        fetchEngravings()
+            .then(list => {
+                const counts: Record<string, number> = {};
+                for (const e of list) {
+                    counts[e.watermark_id] = (counts[e.watermark_id] ?? 0) + 1;
+                }
+                setEngravingCounts(counts);
+            })
+            .catch(() => {});
     }, []);
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -447,6 +474,13 @@ export function WatermarksPage() {
                                     </div>
                                     <div style={s.cardInfo}>
                                         <span style={s.cardName} title={w.name}>{w.name}</span>
+                                        <span
+                                            style={s.engravingsBadge}
+                                            onClick={() => navigate(`/dashboard/engravings?watermark_id=${w.id}`)}
+                                            title="View engravings with this watermark"
+                                        >
+                                            🖨️ {engravingCounts[w.id] ?? 0}
+                                        </span>
                                         <button
                                             style={{
                                                 ...s.deleteBtn,

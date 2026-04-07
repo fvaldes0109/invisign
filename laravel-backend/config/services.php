@@ -31,4 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'watermarking' => [
+        'url' => env('WATERMARK_SERVICE_URL', 'http://backend:8000'),
+    ],
+
 ];

@@ -11,8 +11,6 @@ use Tests\TestCase;
 
 class WatermarkTest extends TestCase
 {
-    use RefreshDatabase;
-
     // ── Count ────────────────────────────────────────────────────────────────
 
     public function test_count_returns_number_of_authenticated_users_watermarks(): void
@@ -129,15 +127,18 @@ class WatermarkTest extends TestCase
         $file = UploadedFile::fake()->image('photo.jpg', 800, 600);
 
         $response = $this->actingAs($user, 'sanctum')
-            ->postJson('/api/watermarks', ['image' => $file]);
+            ->postJson('/api/watermarks', [
+                'image' => $file,
+                'name' => 'My Mark'
+            ]);
 
         $response->assertOk()
             ->assertJsonStructure(['data' => ['id', 'name', 'image_url', 'thumbnail_url']])
-            ->assertJsonPath('data.name', 'photo.jpg');
+            ->assertJsonPath('data.name', 'My Mark');
 
         $this->assertDatabaseHas('watermarks', [
             'user_id' => $user->id,
-            'name'    => 'photo.jpg',
+            'name'    => 'My Mark',
         ]);
 
         $id = $response->json('data.id');
