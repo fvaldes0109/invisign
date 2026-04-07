@@ -1,0 +1,237 @@
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import type { Engraving } from '../services/engravingApi';
+import type { UserImage } from '../services/imageApi';
+import type { Watermark } from '../services/watermarkApi';
+import { useEffect } from 'react';
+
+interface LocationState {
+    engraving: Engraving;
+    image: UserImage;
+    watermark: Watermark;
+}
+
+const c = {
+    bg: '#07090F',
+    surface: '#0F1320',
+    surfaceAlt: '#141929',
+    border: '#1E2A45',
+    accent: '#06B6D4',
+    accentDark: '#0891B2',
+    text: '#F1F5F9',
+    textMuted: '#94A3B8',
+    textDim: '#64748B',
+};
+
+const s: Record<string, React.CSSProperties> = {
+    page: {
+        minHeight: '100vh',
+        background: c.bg,
+        color: c.text,
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+        display: 'flex',
+        flexDirection: 'column',
+    },
+    topbar: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        padding: '1.1rem 2.5rem',
+        borderBottom: `1px solid ${c.border}`,
+        background: 'rgba(7,9,15,0.85)',
+        backdropFilter: 'blur(12px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+    },
+    backLink: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        textDecoration: 'none',
+        color: c.textMuted,
+        fontSize: '0.85rem',
+        fontWeight: 500,
+        padding: '0.4rem 0.8rem',
+        borderRadius: 8,
+        border: `1px solid ${c.border}`,
+        background: c.surface,
+    },
+    topbarTitle: {
+        fontSize: '1rem',
+        fontWeight: 700,
+        color: c.text,
+        letterSpacing: '-0.02em',
+    },
+    main: {
+        flex: 1,
+        padding: '2.5rem',
+        maxWidth: 1100,
+        width: '100%',
+        margin: '0 auto',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2rem',
+    },
+    badge: {
+        display: 'inline-flex',
+        alignSelf: 'flex-start',
+        padding: '0.3rem 0.9rem',
+        borderRadius: 100,
+        background: `rgba(6,182,212,0.1)`,
+        border: `1px solid rgba(6,182,212,0.25)`,
+        color: c.accent,
+        fontSize: '0.72rem',
+        fontWeight: 700,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase' as const,
+    },
+    pageTitle: {
+        fontSize: '1.6rem',
+        fontWeight: 800,
+        letterSpacing: '-0.03em',
+        margin: 0,
+    },
+    pageSub: {
+        fontSize: '0.88rem',
+        color: c.textMuted,
+        margin: 0,
+    },
+    resultCard: {
+        background: c.surface,
+        border: `1px solid ${c.border}`,
+        borderRadius: 18,
+        overflow: 'hidden',
+    },
+    resultImg: {
+        display: 'block',
+        width: '100%',
+        maxHeight: '65vh',
+        objectFit: 'contain' as const,
+        background: c.surfaceAlt,
+    },
+    sourcesRow: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '1rem',
+    },
+    sourceCard: {
+        background: c.surface,
+        border: `1px solid ${c.border}`,
+        borderRadius: 14,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column' as const,
+    },
+    sourceImg: {
+        display: 'block',
+        width: '100%',
+        aspectRatio: '16/9',
+        objectFit: 'cover' as const,
+    },
+    sourceInfo: {
+        padding: '0.75rem 1rem',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '0.2rem',
+    },
+    sourceLabel: {
+        fontSize: '0.7rem',
+        fontWeight: 700,
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase' as const,
+        color: c.accent,
+    },
+    sourceName: {
+        fontSize: '0.88rem',
+        fontWeight: 600,
+        color: c.text,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap' as const,
+    },
+    downloadBtn: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.7rem 1.5rem',
+        borderRadius: 10,
+        border: 'none',
+        background: `linear-gradient(135deg, ${c.accent}, ${c.accentDark})`,
+        color: '#fff',
+        fontWeight: 700,
+        fontSize: '0.9rem',
+        cursor: 'pointer',
+        textDecoration: 'none',
+        boxShadow: `0 0 20px rgba(6,182,212,0.3)`,
+        alignSelf: 'flex-start',
+    },
+};
+
+export function EngravingResultPage() {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const state = location.state as LocationState | null;
+
+    useEffect(() => {
+        if (!state?.engraving) {
+            navigate('/dashboard/images', { replace: true });
+        }
+    }, [state, navigate]);
+
+    if (!state?.engraving) return null;
+
+    const { engraving, image, watermark } = state;
+
+    return (
+        <div style={s.page}>
+            <header style={s.topbar}>
+                <Link to="/dashboard/images" style={s.backLink}>← My Images</Link>
+                <span style={s.topbarTitle}>Engraving Result</span>
+            </header>
+
+            <main style={s.main}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <span style={s.badge}>Watermark embedded</span>
+                    <h1 style={s.pageTitle}>{image.name}</h1>
+                    <p style={s.pageSub}>
+                        The watermark <strong style={{ color: c.text }}>{watermark.name}</strong> has been invisibly embedded. The result looks identical to the original.
+                    </p>
+                </div>
+
+                <div style={s.resultCard}>
+                    <img
+                        src={engraving.engraved_url}
+                        alt="Engraved result"
+                        style={s.resultImg}
+                    />
+                </div>
+
+                <a
+                    href={engraving.engraved_url}
+                    download
+                    style={s.downloadBtn}
+                >
+                    ↓ Download engraved image
+                </a>
+
+                <div style={s.sourcesRow}>
+                    <div style={s.sourceCard}>
+                        <img src={image.image_url} alt={image.name} style={s.sourceImg} />
+                        <div style={s.sourceInfo}>
+                            <span style={s.sourceLabel}>Original image</span>
+                            <span style={s.sourceName} title={image.name}>{image.name}</span>
+                        </div>
+                    </div>
+                    <div style={s.sourceCard}>
+                        <img src={watermark.image_url} alt={watermark.name} style={s.sourceImg} />
+                        <div style={s.sourceInfo}>
+                            <span style={s.sourceLabel}>Watermark used</span>
+                            <span style={s.sourceName} title={watermark.name}>{watermark.name}</span>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    );
+}
