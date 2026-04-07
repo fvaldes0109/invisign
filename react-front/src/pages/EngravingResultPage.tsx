@@ -1,8 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import type { Engraving } from '../services/engravingApi';
+import { deleteEngraving, type Engraving } from '../services/engravingApi';
 import type { UserImage } from '../services/imageApi';
 import type { Watermark } from '../services/watermarkApi';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 interface LocationState {
     engraving: Engraving;
@@ -166,12 +166,37 @@ const s: Record<string, React.CSSProperties> = {
         boxShadow: `0 0 20px rgba(6,182,212,0.3)`,
         alignSelf: 'flex-start',
     },
+    actionsRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        flexWrap: 'wrap' as const,
+    },
+    deleteBtn: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.7rem 1.5rem',
+        borderRadius: 10,
+        border: '1px solid rgba(248,113,113,0.35)',
+        background: 'rgba(248,113,113,0.08)',
+        color: '#F87171',
+        fontWeight: 700,
+        fontSize: '0.9rem',
+        cursor: 'pointer',
+        alignSelf: 'flex-start',
+    },
+    deleteBtnDisabled: {
+        opacity: 0.4,
+        cursor: 'not-allowed',
+    },
 };
 
 export function EngravingResultPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const state = location.state as LocationState | null;
+    const [deleting, setDeleting] = useState(false);
 
     useEffect(() => {
         if (!state?.engraving) {
@@ -182,6 +207,16 @@ export function EngravingResultPage() {
     if (!state?.engraving) return null;
 
     const { engraving, image, watermark } = state;
+
+    async function handleDelete() {
+        setDeleting(true);
+        try {
+            await deleteEngraving(engraving.id);
+            navigate('/dashboard/engravings', { replace: true });
+        } catch {
+            setDeleting(false);
+        }
+    }
 
     return (
         <div style={s.page}>
@@ -207,13 +242,25 @@ export function EngravingResultPage() {
                     />
                 </div>
 
-                <a
-                    href={engraving.engraved_url}
-                    download
-                    style={s.downloadBtn}
-                >
-                    ↓ Download engraved image
-                </a>
+                <div style={s.actionsRow}>
+                    <a
+                        href={engraving.engraved_url}
+                        download
+                        style={s.downloadBtn}
+                    >
+                        ↓ Download engraved image
+                    </a>
+                    <button
+                        style={{
+                            ...s.deleteBtn,
+                            ...(deleting ? s.deleteBtnDisabled : {}),
+                        }}
+                        disabled={deleting}
+                        onClick={handleDelete}
+                    >
+                        {deleting ? '…' : 'Delete engraving'}
+                    </button>
+                </div>
 
                 <div style={s.sourcesRow}>
                     <div style={s.sourceCard}>

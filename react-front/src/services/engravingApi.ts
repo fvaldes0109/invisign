@@ -38,6 +38,14 @@ export async function fetchEngravings(filters?: { image_id?: string; watermark_i
     return body.data;
 }
 
+export async function deleteEngraving(id: string): Promise<void> {
+    const res = await fetch(`${BACKEND_URL}/api/engravings/${id}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+    });
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+}
+
 export async function createEngraving(imageId: string, watermarkId: string): Promise<Engraving> {
     const res = await fetch(`${BACKEND_URL}/api/engravings`, {
         method: 'POST',

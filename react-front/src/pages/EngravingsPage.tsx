@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { fetchEngravings, type Engraving } from '../services/engravingApi';
+import { fetchEngravings, deleteEngraving, type Engraving } from '../services/engravingApi';
 
 const c = {
     bg: '#07090F',
@@ -180,6 +180,41 @@ const s: Record<string, React.CSSProperties> = {
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap' as const,
     },
+    wmBadge: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.45rem',
+        marginTop: '0.4rem',
+        padding: '0.35rem 0.6rem',
+        borderRadius: 8,
+        background: c.surfaceAlt,
+        border: `1px solid ${c.border}`,
+    },
+    wmBadgeThumb: {
+        width: 22,
+        height: 22,
+        borderRadius: 4,
+        objectFit: 'cover' as const,
+        flexShrink: 0,
+        background: c.border,
+        display: 'block',
+    },
+    wmBadgeLabel: {
+        fontSize: '0.68rem',
+        fontWeight: 600,
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase' as const,
+        color: c.accent,
+        flexShrink: 0,
+    },
+    wmBadgeName: {
+        fontSize: '0.78rem',
+        fontWeight: 500,
+        color: c.textMuted,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap' as const,
+    },
     emptyState: {
         display: 'flex',
         flexDirection: 'column' as const,
@@ -195,6 +230,26 @@ const s: Record<string, React.CSSProperties> = {
     emptyIcon: { fontSize: '2.5rem' },
     emptyTitle: { fontSize: '1rem', fontWeight: 700 },
     emptyHint: { fontSize: '0.85rem', color: c.textMuted },
+    cardActions: {
+        padding: '0.5rem 0.75rem',
+        borderTop: `1px solid ${c.border}`,
+        display: 'flex',
+        justifyContent: 'flex-end',
+    },
+    deleteBtn: {
+        padding: '0.3rem 0.75rem',
+        borderRadius: 7,
+        border: '1px solid rgba(248,113,113,0.3)',
+        background: 'rgba(248,113,113,0.08)',
+        color: '#F87171',
+        fontSize: '0.75rem',
+        fontWeight: 600,
+        cursor: 'pointer',
+    },
+    deleteBtnDisabled: {
+        opacity: 0.4,
+        cursor: 'not-allowed',
+    },
 };
 
 export function EngravingsPage() {
@@ -205,6 +260,7 @@ export function EngravingsPage() {
 
     const [engravings, setEngravings] = useState<Engraving[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
     useEffect(() => {
         setLoading(true);
@@ -212,6 +268,19 @@ export function EngravingsPage() {
             .then(setEngravings)
             .finally(() => setLoading(false));
     }, [imageId, watermarkId]);
+
+    async function handleDelete(e: React.MouseEvent, id: string) {
+        e.stopPropagation();
+        setDeletingId(id);
+        try {
+            await deleteEngraving(id);
+            setEngravings(prev => prev.filter(en => en.id !== id));
+        } catch {
+            // silently keep item on failure
+        } finally {
+            setDeletingId(null);
+        }
+    }
 
     function clearFilter(key: 'image_id' | 'watermark_id') {
         const next = new URLSearchParams(searchParams);
@@ -294,9 +363,31 @@ export function EngravingsPage() {
                                     <div style={s.cardInfo}>
                                         <span style={s.cardMeta}>Image</span>
                                         <span style={s.cardName} title={e.image?.name}>{e.image?.name ?? e.image_id}</span>
-                                        <span style={s.cardSub} title={e.watermark?.name}>
-                                            Mark: {e.watermark?.name ?? e.watermark_id}
-                                        </span>
+                                        <div style={s.wmBadge}>
+                                            {e.watermark?.thumbnail_url && (
+                                                <img
+                                                    src={e.watermark.thumbnail_url}
+                                                    alt={e.watermark.name}
+                                                    style={s.wmBadgeThumb}
+                                                />
+                                            )}
+                                            <span style={s.wmBadgeLabel}>Mark</span>
+                                            <span style={s.wmBadgeName} title={e.watermark?.name}>
+                                                {e.watermark?.name ?? e.watermark_id}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div style={s.cardActions}>
+                                        <button
+                                            style={{
+                                                ...s.deleteBtn,
+                                                ...(deletingId === e.id ? s.deleteBtnDisabled : {}),
+                                            }}
+                                            disabled={deletingId === e.id}
+                                            onClick={ev => handleDelete(ev, e.id)}
+                                        >
+                                            {deletingId === e.id ? '…' : 'Delete'}
+                                        </button>
                                     </div>
                                 </div>
                             ))}

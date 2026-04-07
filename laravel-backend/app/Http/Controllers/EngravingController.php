@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\NotFound;
 use App\Http\Resource\EngravingResource;
+use App\Http\UseCase\DeleteEngraving;
 use App\Http\UseCase\EngraveImage;
 use App\Http\UseCase\ListEngravings;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +16,7 @@ class EngravingController extends Controller
     public function __construct(
         private readonly EngraveImage   $engraveImage,
         private readonly ListEngravings $listEngravings,
+        private readonly DeleteEngraving $deleteEngraving,
     ) {
     }
 
@@ -44,6 +46,16 @@ class EngravingController extends Controller
             );
 
             return new EngravingResource($engraving);
+        } catch (NotFound $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
+        }
+    }
+
+    public function destroy(Request $request, string $id): JsonResponse
+    {
+        try {
+            $this->deleteEngraving->execute($id, $request->user()->id);
+            return response()->json(null, 204);
         } catch (NotFound $e) {
             return response()->json(['message' => $e->getMessage()], 404);
         }

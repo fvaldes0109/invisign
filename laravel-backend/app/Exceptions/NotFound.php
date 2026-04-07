@@ -13,4 +13,9 @@ class NotFound extends \Exception
     {
         return new self("Image $imageId not found");
     }
+
+    public static function engravingNotFound(string $engravingId): self
+    {
+        return new self("Engraving $engravingId not found");
+    }
 }

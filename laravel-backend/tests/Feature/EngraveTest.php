@@ -294,4 +294,75 @@ class EngraveTest extends TestCase
     {
         $this->getJson('/api/engravings')->assertUnauthorized();
     }
+
+    // ── Destroy ───────────────────────────────────────────────────────────────
+
+    public function test_destroy_deletes_engraving_and_file(): void
+    {
+        Storage::fake('public');
+
+        $user      = User::factory()->create();
+        $image     = Image::factory()->forUser($user)->create();
+        $watermark = Watermark::factory()->forUser($user)->create();
+
+        Storage::disk('public')->put($image->image_path, 'fake-image-bytes');
+        Storage::disk('public')->put($watermark->image_path, 'fake-watermark-bytes');
+
+        $storeResponse = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/engravings', [
+                'image_id'     => $image->id,
+                'watermark_id' => $watermark->id,
+            ]);
+
+        $engravingId = $storeResponse->json('data.id');
+
+        $this->actingAs($user, 'sanctum')
+            ->deleteJson("/api/engravings/{$engravingId}")
+            ->assertNoContent();
+
+        $this->assertDatabaseMissing('engravings', ['id' => $engravingId]);
+        Storage::disk('public')->assertMissing("engravings/{$user->id}/{$engravingId}.jpg");
+    }
+
+    public function test_destroy_returns_404_when_engraving_does_not_exist(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user, 'sanctum')
+            ->deleteJson('/api/engravings/00000000-0000-0000-0000-000000000000')
+            ->assertNotFound();
+    }
+
+    public function test_destroy_returns_404_when_engraving_belongs_to_another_user(): void
+    {
+        Storage::fake('public');
+
+        $owner    = User::factory()->create();
+        $intruder = User::factory()->create();
+        $image     = Image::factory()->forUser($owner)->create();
+        $watermark = Watermark::factory()->forUser($owner)->create();
+
+        Storage::disk('public')->put($image->image_path, 'fake-image-bytes');
+        Storage::disk('public')->put($watermark->image_path, 'fake-watermark-bytes');
+
+        $storeResponse = $this->actingAs($owner, 'sanctum')
+            ->postJson('/api/engravings', [
+                'image_id'     => $image->id,
+                'watermark_id' => $watermark->id,
+            ]);
+
+        $engravingId = $storeResponse->json('data.id');
+
+        $this->actingAs($intruder, 'sanctum')
+            ->deleteJson("/api/engravings/{$engravingId}")
+            ->assertNotFound();
+
+        $this->assertDatabaseHas('engravings', ['id' => $engravingId]);
+    }
+
+    public function test_destroy_requires_authentication(): void
+    {
+        $this->deleteJson('/api/engravings/00000000-0000-0000-0000-000000000000')
+            ->assertUnauthorized();
+    }
 }

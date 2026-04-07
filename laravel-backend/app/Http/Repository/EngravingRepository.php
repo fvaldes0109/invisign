@@ -2,9 +2,11 @@
 
 namespace App\Http\Repository;
 
+use App\Exceptions\NotFound;
 use App\Http\Entity\Engraving;
 use App\Http\Entity\EngravingCollection;
 use App\Models\Engraving as EloquentEngraving;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class EngravingRepository
 {
@@ -35,5 +37,26 @@ class EngravingRepository
         }
 
         return EngravingCollection::fromEloquent($query->get());
+    }
+
+    /** @throws NotFound */
+    public function findByIdForUser(string $id, int $userId): Engraving
+    {
+        try {
+            /** @var EloquentEngraving $row */
+            $row = EloquentEngraving::query()
+                ->where('id', $id)
+                ->where('user_id', $userId)
+                ->firstOrFail();
+
+            return Engraving::fromEloquent($row);
+        } catch (ModelNotFoundException) {
+            throw NotFound::engravingNotFound($id);
+        }
+    }
+
+    public function delete(Engraving $engraving): void
+    {
+        EloquentEngraving::destroy($engraving->getId());
     }
 }
