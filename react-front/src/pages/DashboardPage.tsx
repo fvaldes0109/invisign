@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { logout } from '../services/authApi';
 import { fetchWatermarkCount, fetchWatermarks } from '../services/watermarkApi';
+import { fetchImageCount, fetchImages } from '../services/imageApi';
 
 const c = {
     bg: '#07090F',
@@ -262,12 +263,16 @@ function ThumbStrip({ items }: ThumbStripProps) {
 
 export function DashboardPage() {
     const navigate = useNavigate();
-    const [count, setCount] = useState<number | null>(null);
+    const [watermarkCount, setWatermarkCount] = useState<number | null>(null);
+    const [imageCount, setImageCount] = useState<number | null>(null);
     const [recentWatermarks, setRecentWatermarks] = useState<HasThumbnail[]>([]);
+    const [recentImages, setRecentImages] = useState<HasThumbnail[]>([]);
 
     useEffect(() => {
-        fetchWatermarkCount().then(setCount).catch(() => setCount(0));
+        fetchWatermarkCount().then(setWatermarkCount).catch(() => setWatermarkCount(0));
         fetchWatermarks().then(list => setRecentWatermarks(list.slice(0, 4))).catch(() => {});
+        fetchImageCount().then(setImageCount).catch(() => setImageCount(0));
+        fetchImages().then(list => setRecentImages(list.slice(0, 4))).catch(() => {});
     }, []);
 
     async function handleLogout() {
@@ -280,10 +285,14 @@ export function DashboardPage() {
     const stats = [
         {
             label: 'Total watermarks',
-            value: count === null ? '—' : String(count),
-            sub: count === 0 ? 'Embed your first image' : `${count} image${count === 1 ? '' : 's'} protected`,
+            value: watermarkCount === null ? '—' : String(watermarkCount),
+            sub: watermarkCount === 0 ? 'Upload your first watermark' : `${watermarkCount} pattern${watermarkCount === 1 ? '' : 's'} ready`,
         },
-        { label: 'Images protected', value: '0', sub: 'Upload to get started' },
+        {
+            label: 'Images uploaded',
+            value: imageCount === null ? '—' : String(imageCount),
+            sub: imageCount === 0 ? 'Upload to get started' : `${imageCount} image${imageCount === 1 ? '' : 's'} ready to protect`,
+        },
         { label: 'Extractions run', value: '0', sub: 'No extractions yet' },
     ];
 
@@ -338,18 +347,18 @@ export function DashboardPage() {
                         </div>
                     </Link>
 
-                    <Link to="/dashboard/embed" style={s.card}>
+                    <Link to="/dashboard/images" style={s.card}>
                         <div style={s.cardAccentBar(`linear-gradient(90deg, ${c.accent}, #38BDF8)`)} />
                         <div style={s.cardBody}>
-                            <div style={s.cardIconWrap(c.accent)}>➕</div>
-                            <div style={s.cardTitle}>Embed Watermark</div>
+                            <div style={s.cardIconWrap(c.accent)}>🖼️</div>
+                            <div style={s.cardTitle}>My Images</div>
                             <div style={s.cardDesc}>
-                                Upload an image and a watermark pattern. We'll invisibly encode
-                                the mark and return a protected file that looks identical to the original.
+                                Upload and manage the images you want to protect. Each image
+                                can be watermarked with any of your patterns from the embed flow.
                             </div>
-                            <ThumbStrip items={[]} />
+                            <ThumbStrip items={recentImages} />
                             <div style={s.cardCta(c.accent)}>
-                                <span>Upload & embed</span>
+                                <span>View all images</span>
                                 <span>→</span>
                             </div>
                         </div>

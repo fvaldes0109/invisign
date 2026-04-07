@@ -3,6 +3,7 @@ import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { WatermarksPage } from './pages/WatermarksPage';
+import { ImagesPage } from './pages/ImagesPage';
 import { EmbedPage } from './pages/EmbedPage';
 import { ExtractPage } from './pages/ExtractPage';
 import { MainPage } from './pages/MainPage.tsx';
@@ -31,6 +32,14 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <WatermarksPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/dashboard/images"
+                element={
+                    <ProtectedRoute>
+                        <ImagesPage />
                     </ProtectedRoute>
                 }
             />

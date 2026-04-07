@@ -8,4 +8,9 @@ class NotFound extends \Exception
     {
         return new self("Watermark $watermarkId not found");
     }
+
+    public static function imageNotFound(string $imageId): self
+    {
+        return new self("Image $imageId not found");
+    }
 }
