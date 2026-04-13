@@ -8,6 +8,7 @@ import { EngravingResultPage } from './pages/EngravingResultPage';
 import { EmbedPage } from './pages/EmbedPage';
 import { ExtractPage } from './pages/ExtractPage';
 import { EngravingsPage } from './pages/EngravingsPage';
+import { ExtractionsPage } from './pages/ExtractionsPage';
 import { MainPage } from './pages/MainPage.tsx';
 import { NotFoundPage } from './pages/NotFoundPage.tsx';
 
@@ -58,6 +59,14 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <EngravingResultPage />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/dashboard/extractions"
+                element={
+                    <ProtectedRoute>
+                        <ExtractionsPage />
                     </ProtectedRoute>
                 }
             />

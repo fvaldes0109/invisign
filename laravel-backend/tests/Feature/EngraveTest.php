@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\Watermark;
 use App\Services\FakeWatermarkingService;
 use App\Services\WatermarkingServiceInterface;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 

@@ -32,4 +32,29 @@ class MarkingModuleService implements WatermarkingServiceInterface
 
         return $response->getBody()->getContents();
     }
+
+    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): string
+    {
+        $response = $this->http->post("{$this->baseUrl}/extract", [
+            'multipart' => [
+                [
+                    'name'     => 'marked_image',
+                    'contents' => $markedImageContents,
+                    'filename' => 'marked.jpg',
+                ],
+                [
+                    'name'     => 'original_image',
+                    'contents' => $originalImageContents,
+                    'filename' => 'original.jpg',
+                ],
+                [
+                    'name'     => 'watermark',
+                    'contents' => $watermarkContents,
+                    'filename' => 'watermark.jpg',
+                ],
+            ],
+        ]);
+
+        return $response->getBody()->getContents();
+    }
 }

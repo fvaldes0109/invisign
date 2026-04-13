@@ -4,6 +4,7 @@ import { logout } from '../services/authApi';
 import { fetchWatermarkCount, fetchWatermarks } from '../services/watermarkApi';
 import { fetchImageCount, fetchImages } from '../services/imageApi';
 import { fetchEngravings } from '../services/engravingApi';
+import { fetchExtractionCount } from '../services/extractionApi';
 
 const c = {
     bg: '#07090F',
@@ -266,7 +267,8 @@ export function DashboardPage() {
     const navigate = useNavigate();
     const [watermarkCount, setWatermarkCount] = useState<number | null>(null);
     const [imageCount, setImageCount] = useState<number | null>(null);
-    const [engravingCount, setEngravingCount] = useState<number | null>(null);
+    const [engravingCount, setEngravingCount]   = useState<number | null>(null);
+    const [extractionCount, setExtractionCount] = useState<number | null>(null);
     const [recentWatermarks, setRecentWatermarks] = useState<HasThumbnail[]>([]);
     const [recentImages, setRecentImages] = useState<HasThumbnail[]>([]);
 
@@ -276,6 +278,7 @@ export function DashboardPage() {
         fetchImageCount().then(setImageCount).catch(() => setImageCount(0));
         fetchImages().then(list => setRecentImages(list.slice(0, 4))).catch(() => {});
         fetchEngravings().then(list => setEngravingCount(list.length)).catch(() => setEngravingCount(0));
+        fetchExtractionCount().then(setExtractionCount).catch(() => setExtractionCount(0));
     }, []);
 
     async function handleLogout() {
@@ -301,7 +304,11 @@ export function DashboardPage() {
             value: engravingCount === null ? '—' : String(engravingCount),
             sub: engravingCount === 0 ? 'No engravings yet' : `${engravingCount} engraving${engravingCount === 1 ? '' : 's'} created`,
         },
-        { label: 'Extractions run', value: '0', sub: 'No extractions yet' },
+        {
+            label: 'Extractions run',
+            value: extractionCount === null ? '—' : String(extractionCount),
+            sub: extractionCount === 0 ? 'No extractions yet' : `${extractionCount} extraction${extractionCount === 1 ? '' : 's'} run`,
+        },
     ];
 
     return (
@@ -388,18 +395,17 @@ export function DashboardPage() {
                         </div>
                     </Link>
 
-                    <Link to="/dashboard/extract" style={s.card}>
+                    <Link to="/dashboard/extractions" style={s.card}>
                         <div style={s.cardAccentBar(`linear-gradient(90deg, ${c.success}, #34D399)`)} />
                         <div style={s.cardBody}>
                             <div style={s.cardIconWrap(c.success)}>🔍</div>
-                            <div style={s.cardTitle}>Extract & Verify</div>
+                            <div style={s.cardTitle}>My Extractions</div>
                             <div style={s.cardDesc}>
-                                Upload a suspected copy alongside the original. WaterMark will
-                                extract the hidden payload to confirm ownership — even after
-                                heavy edits or compression.
+                                Browse all past watermark extractions. Run a new extraction to
+                                verify ownership of a suspected copy.
                             </div>
                             <div style={s.cardCta(c.success)}>
-                                <span>Run extraction</span>
+                                <span>View all extractions</span>
                                 <span>→</span>
                             </div>
                         </div>

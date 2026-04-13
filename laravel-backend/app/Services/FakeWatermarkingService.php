@@ -6,6 +6,16 @@ class FakeWatermarkingService implements WatermarkingServiceInterface
 {
     public function engrave(string $imageContents, string $watermarkContents): string
     {
+        return $this->makeJpeg();
+    }
+
+    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): string
+    {
+        return $this->makeJpeg();
+    }
+
+    private function makeJpeg(): string
+    {
         // Returns a minimal 1×1 white JPEG so storage assertions work
         // without making any real HTTP calls to the marking-module service.
         $img = imagecreatetruecolor(1, 1);

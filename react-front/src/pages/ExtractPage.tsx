@@ -1,4 +1,7 @@
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { fetchEngravings, type Engraving } from '../services/engravingApi';
+import { runExtraction, type ExtractionResult } from '../services/extractionApi';
 
 const c = {
     bg: '#07090F',
@@ -6,12 +9,14 @@ const c = {
     surfaceAlt: '#141929',
     border: '#1E2A45',
     primary: '#6366F1',
-    primaryLight: '#818CF8',
     accent: '#06B6D4',
     text: '#F1F5F9',
     textMuted: '#94A3B8',
     textDim: '#64748B',
     success: '#10B981',
+    error: '#F87171',
+    errorBg: 'rgba(248,113,113,0.08)',
+    errorBorder: 'rgba(248,113,113,0.25)',
 };
 
 const s: Record<string, React.CSSProperties> = {
@@ -56,128 +61,233 @@ const s: Record<string, React.CSSProperties> = {
     },
     main: {
         flex: 1,
+        padding: '2.5rem',
+        maxWidth: 860,
+        width: '100%',
+        margin: '0 auto',
+        boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '4rem 2.5rem',
-        gap: '1.5rem',
-        textAlign: 'center',
+        gap: '2rem',
     },
-    iconWrap: {
-        width: 72,
-        height: 72,
-        borderRadius: 20,
-        background: `rgba(16,185,129,0.1)`,
-        border: `1px solid rgba(16,185,129,0.25)`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '2rem',
-    },
-    badge: {
-        display: 'inline-flex',
-        padding: '0.3rem 0.9rem',
-        borderRadius: 100,
-        background: `rgba(16,185,129,0.1)`,
-        border: `1px solid rgba(16,185,129,0.25)`,
-        color: c.success,
-        fontSize: '0.72rem',
+    pageHeader: { marginBottom: '0.5rem' },
+    pageLabel: {
+        fontSize: '0.75rem',
         fontWeight: 700,
-        letterSpacing: '0.06em',
+        letterSpacing: '0.08em',
         textTransform: 'uppercase' as const,
+        color: c.success,
+        marginBottom: '0.4rem',
     },
-    title: {
-        fontSize: '1.75rem',
+    pageTitle: {
+        fontSize: '1.6rem',
         fontWeight: 800,
         letterSpacing: '-0.03em',
-        margin: 0,
+        margin: '0 0 0.4rem',
     },
-    sub: {
-        fontSize: '0.95rem',
-        color: c.textMuted,
-        lineHeight: 1.7,
-        maxWidth: 460,
-        margin: 0,
-    },
-    uploadRow: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '1rem',
-        width: '100%',
-        maxWidth: 560,
-    },
-    uploadZone: {
-        padding: '1.75rem 1.25rem',
-        borderRadius: 14,
-        border: `2px dashed ${c.border}`,
-        background: c.surfaceAlt,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '0.5rem',
-        color: c.textDim,
-    },
-    uploadIcon: { fontSize: '1.8rem' },
-    uploadLabel: {
-        fontSize: '0.78rem',
-        fontWeight: 700,
-        color: c.textMuted,
-        textTransform: 'uppercase' as const,
-        letterSpacing: '0.04em',
-    },
-    uploadSub: { fontSize: '0.72rem', color: c.textDim },
-    resultBox: {
-        width: '100%',
-        maxWidth: 560,
-        padding: '1.25rem 1.5rem',
-        borderRadius: 14,
+    pageSub: { fontSize: '0.9rem', color: c.textMuted, margin: 0 },
+
+    section: {
         background: c.surface,
         border: `1px solid ${c.border}`,
+        borderRadius: 16,
+        padding: '1.5rem',
         display: 'flex',
-        flexDirection: 'column',
-        gap: '0.6rem',
-        textAlign: 'left',
+        flexDirection: 'column' as const,
+        gap: '1rem',
     },
-    resultLabel: {
-        fontSize: '0.72rem',
+    sectionTitle: {
+        fontSize: '0.95rem',
         fontWeight: 700,
-        letterSpacing: '0.05em',
-        textTransform: 'uppercase' as const,
-        color: c.textDim,
+        color: c.text,
+        margin: 0,
     },
-    resultRow: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        fontSize: '0.85rem',
+    sectionSub: {
+        fontSize: '0.82rem',
+        color: c.textMuted,
+        marginTop: '-0.5rem',
     },
-    resultKey: { color: c.textMuted },
-    resultVal: (color: string): React.CSSProperties => ({
-        fontWeight: 700,
-        color,
-        fontFamily: 'monospace',
-    }),
-    ctaBtn: {
-        padding: '0.75rem 1.75rem',
+
+    // Engraving picker
+    engravingGrid: {
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+        gap: '0.75rem',
+        maxHeight: 320,
+        overflowY: 'auto' as const,
+        paddingRight: '0.25rem',
+    },
+    engravingItem: {
         borderRadius: 10,
+        overflow: 'hidden',
+        border: `2px solid ${c.border}`,
+        cursor: 'pointer',
+        background: c.surfaceAlt,
+        display: 'flex',
+        flexDirection: 'column' as const,
+    },
+    engravingItemSelected: {
+        borderColor: c.success,
+        boxShadow: `0 0 0 2px rgba(16,185,129,0.25)`,
+    },
+    engravingThumb: {
+        width: '100%',
+        aspectRatio: '4/3',
+        objectFit: 'cover' as const,
+        display: 'block',
+    },
+    engravingLabel: {
+        padding: '0.4rem 0.6rem',
+        fontSize: '0.72rem',
+        fontWeight: 600,
+        color: c.textMuted,
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        whiteSpace: 'nowrap' as const,
+    },
+
+    // File upload
+    uploadZone: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        padding: '1rem 1.25rem',
+        borderRadius: 10,
+        border: `1px dashed ${c.border}`,
+        background: c.surfaceAlt,
+        cursor: 'pointer',
+    },
+    uploadIcon: { fontSize: '1.5rem', flexShrink: 0 },
+    uploadText: { fontSize: '0.875rem', color: c.textMuted },
+    uploadFilename: { fontSize: '0.875rem', color: c.text, fontWeight: 500 },
+
+    // Action row
+    actionRow: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        flexWrap: 'wrap' as const,
+    },
+    runBtn: {
+        padding: '0.7rem 1.75rem',
+        borderRadius: 10,
+        border: 'none',
         background: `linear-gradient(135deg, ${c.success}, #059669)`,
         color: '#fff',
         fontWeight: 700,
         fontSize: '0.9rem',
-        border: 'none',
         cursor: 'pointer',
         boxShadow: `0 0 20px rgba(16,185,129,0.3)`,
-        opacity: 0.5,
     },
-    hint: {
-        fontSize: '0.78rem',
+    runBtnDisabled: {
+        opacity: 0.4,
+        cursor: 'not-allowed',
+    },
+    errorBox: {
+        padding: '0.65rem 1rem',
+        borderRadius: 8,
+        background: c.errorBg,
+        border: `1px solid ${c.errorBorder}`,
+        color: c.error,
+        fontSize: '0.82rem',
+    },
+
+    // Result
+    resultSection: {
+        background: c.surface,
+        border: `1px solid rgba(16,185,129,0.3)`,
+        borderRadius: 16,
+        overflow: 'hidden',
+    },
+    resultHeader: {
+        padding: '1rem 1.5rem',
+        borderBottom: `1px solid rgba(16,185,129,0.2)`,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.6rem',
+    },
+    resultBadge: {
+        display: 'inline-flex',
+        padding: '0.2rem 0.7rem',
+        borderRadius: 100,
+        background: `rgba(16,185,129,0.1)`,
+        border: `1px solid rgba(16,185,129,0.3)`,
+        color: c.success,
+        fontSize: '0.7rem',
+        fontWeight: 700,
+        letterSpacing: '0.06em',
+        textTransform: 'uppercase' as const,
+    },
+    resultTitle: { fontSize: '0.95rem', fontWeight: 700 },
+    resultImg: {
+        display: 'block',
+        width: '100%',
+        maxHeight: 400,
+        objectFit: 'contain' as const,
+        background: c.surfaceAlt,
+    },
+    resultFooter: {
+        padding: '1rem 1.5rem',
+        display: 'flex',
+        justifyContent: 'flex-end',
+    },
+    downloadBtn: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.55rem 1.25rem',
+        borderRadius: 9,
+        border: 'none',
+        background: `linear-gradient(135deg, ${c.success}, #059669)`,
+        color: '#fff',
+        fontWeight: 700,
+        fontSize: '0.85rem',
+        cursor: 'pointer',
+        textDecoration: 'none',
+    },
+
+    emptyState: {
+        textAlign: 'center' as const,
+        padding: '2rem',
         color: c.textDim,
-        fontStyle: 'italic',
+        fontSize: '0.875rem',
     },
 };
 
 export function ExtractPage() {
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const [engravings, setEngravings]           = useState<Engraving[]>([]);
+    const [loadingEngravings, setLoadingEngravings] = useState(true);
+    const [selectedEngraving, setSelectedEngraving] = useState<Engraving | null>(null);
+    const [suspectFile, setSuspectFile]         = useState<File | null>(null);
+    const [running, setRunning]                 = useState(false);
+    const [error, setError]                     = useState('');
+    const [result, setResult]                   = useState<ExtractionResult | null>(null);
+
+    useEffect(() => {
+        fetchEngravings()
+            .then(setEngravings)
+            .finally(() => setLoadingEngravings(false));
+    }, []);
+
+    async function handleRun() {
+        if (!selectedEngraving || !suspectFile) return;
+        setRunning(true);
+        setError('');
+        setResult(null);
+        try {
+            const res = await runExtraction(selectedEngraving.id, suspectFile);
+            setResult(res);
+        } catch {
+            setError('Extraction failed. Please try again.');
+        } finally {
+            setRunning(false);
+        }
+    }
+
+    const canRun = !!selectedEngraving && !!suspectFile && !running;
+
     return (
         <div style={s.page}>
             <header style={s.topbar}>
@@ -186,47 +296,103 @@ export function ExtractPage() {
             </header>
 
             <main style={s.main}>
-                <div style={s.iconWrap}>🔍</div>
-                <span style={s.badge}>Coming soon</span>
-                <h1 style={s.title}>Extract & verify ownership</h1>
-                <p style={s.sub}>
-                    Upload a suspected copy alongside the original image and watermark pattern.
-                    WaterMark will extract the hidden payload to confirm ownership — even after
-                    heavy compression, cropping, or colour edits.
-                </p>
+                <div style={s.pageHeader}>
+                    <div style={s.pageLabel}>Watermark extraction</div>
+                    <h1 style={s.pageTitle}>Extract & verify ownership</h1>
+                    <p style={s.pageSub}>
+                        Select one of your engravings, then upload a suspected copy.
+                        WaterMark will attempt to extract the hidden watermark from it.
+                    </p>
+                </div>
 
-                <div style={s.uploadRow}>
-                    <div style={s.uploadZone}>
-                        <span style={s.uploadIcon}>📄</span>
-                        <span style={s.uploadLabel}>Original image</span>
-                        <span style={s.uploadSub}>The clean source file</span>
-                    </div>
-                    <div style={s.uploadZone}>
+                {/* Step 1 — pick an engraving */}
+                <div style={s.section}>
+                    <p style={s.sectionTitle}>1. Select the original engraving</p>
+                    <p style={s.sectionSub}>
+                        Choose the engraving that corresponds to the image you want to verify.
+                    </p>
+
+                    {loadingEngravings ? (
+                        <div style={s.emptyState}>Loading engravings…</div>
+                    ) : engravings.length === 0 ? (
+                        <div style={s.emptyState}>
+                            No engravings yet. Go to My Images to engrave an image first.
+                        </div>
+                    ) : (
+                        <div style={s.engravingGrid}>
+                            {engravings.map(e => (
+                                <div
+                                    key={e.id}
+                                    style={{
+                                        ...s.engravingItem,
+                                        ...(selectedEngraving?.id === e.id ? s.engravingItemSelected : {}),
+                                    }}
+                                    onClick={() => setSelectedEngraving(e)}
+                                >
+                                    <img
+                                        src={e.engraved_url}
+                                        alt="engraved"
+                                        style={s.engravingThumb}
+                                    />
+                                    <span style={s.engravingLabel} title={e.image?.name}>
+                                        {e.image?.name ?? e.image_id}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Step 2 — upload suspect image */}
+                <div style={s.section}>
+                    <p style={s.sectionTitle}>2. Upload the suspected copy</p>
+                    <p style={s.sectionSub}>
+                        The image you believe may contain the embedded watermark.
+                    </p>
+
+                    <div style={s.uploadZone} onClick={() => fileInputRef.current?.click()}>
                         <span style={s.uploadIcon}>🔎</span>
-                        <span style={s.uploadLabel}>Suspected copy</span>
-                        <span style={s.uploadSub}>The file to analyse</span>
+                        {suspectFile
+                            ? <span style={s.uploadFilename}>{suspectFile.name}</span>
+                            : <span style={s.uploadText}>Click to select an image — JPEG, PNG, WebP</span>
+                        }
                     </div>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        style={{ display: 'none' }}
+                        onChange={e => setSuspectFile(e.target.files?.[0] ?? null)}
+                    />
                 </div>
 
-                {/* Placeholder result panel */}
-                <div style={s.resultBox}>
-                    <span style={s.resultLabel}>Extraction result — placeholder</span>
-                    <div style={s.resultRow}>
-                        <span style={s.resultKey}>Owner payload</span>
-                        <span style={s.resultVal(c.primaryLight)}>—</span>
-                    </div>
-                    <div style={s.resultRow}>
-                        <span style={s.resultKey}>Timestamp</span>
-                        <span style={s.resultVal(c.accent)}>—</span>
-                    </div>
-                    <div style={s.resultRow}>
-                        <span style={s.resultKey}>Match confidence</span>
-                        <span style={s.resultVal(c.success)}>—</span>
-                    </div>
+                {/* Run */}
+                <div style={s.actionRow}>
+                    <button
+                        style={{ ...s.runBtn, ...(!canRun ? s.runBtnDisabled : {}) }}
+                        disabled={!canRun}
+                        onClick={handleRun}
+                    >
+                        {running ? 'Running extraction…' : 'Run extraction'}
+                    </button>
+                    {error && <span style={s.errorBox}>⚠ {error}</span>}
                 </div>
 
-                <button style={s.ctaBtn} disabled>Run extraction</button>
-                <span style={s.hint}>Upload functionality will be wired up here.</span>
+                {/* Result */}
+                {result && (
+                    <div style={s.resultSection}>
+                        <div style={s.resultHeader}>
+                            <span style={s.resultBadge}>Result</span>
+                            <span style={s.resultTitle}>Extracted watermark</span>
+                        </div>
+                        <img src={result.result_url} alt="Extracted watermark" style={s.resultImg} />
+                        <div style={s.resultFooter}>
+                            <a href={result.result_url} download style={s.downloadBtn}>
+                                ↓ Download
+                            </a>
+                        </div>
+                    </div>
+                )}
             </main>
         </div>
     );
