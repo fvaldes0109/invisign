@@ -98,8 +98,9 @@ def mask_image(image: np.ndarray, watermark: np.ndarray) -> np.ndarray:
     """
     Embed ``watermark`` into ``image`` using the SVD + Hadamard scheme.
 
-    Both inputs are BGR uint8 arrays. The returned image is cropped to the
-    largest multiple of ``BLOCK_SIZE`` that fits inside ``image``.
+    Both inputs are BGR uint8 arrays.  The returned image has the same
+    dimensions as ``image`` — edge pixels outside the block grid are
+    copied unchanged from the original.
     """
     _validate_image(image, "cover image")
     (S_w,) = _watermark_svd(watermark, full=False)
@@ -143,7 +144,15 @@ def mask_image(image: np.ndarray, watermark: np.ndarray) -> np.ndarray:
     # Clip to valid pixel range and cast.
     M = np.clip(M, 0.0, 255.0).astype(np.uint8)
 
-    return blocks.reconstruct(M, image.shape)
+    watermarked = blocks.reconstruct(M, image.shape)
+
+    # Paste the watermarked blocks back onto the original so the output
+    # preserves the original dimensions.  Edge pixels that fall outside
+    # any complete block are kept from the original untouched.
+    result = image.copy()
+    rh, rw = watermarked.shape[:2]
+    result[:rh, :rw] = watermarked
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -159,15 +168,30 @@ def extract_mask(
     Recover the watermark from ``masked_image`` using the un-marked
     ``original_image`` and the original watermark (needed for U, V^T).
 
+    The two images do not need pixel-exact matching dimensions — both are
+    cropped to the largest common block-aligned region before comparison.
+
     Returns a grayscale uint8 image the same size as the watermark.
     """
     _validate_image(masked_image, "marked image")
     _validate_image(original_image, "original image")
-    if masked_image.shape != original_image.shape:
+
+    n = blocks.BLOCK_SIZE
+
+    # Crop both images to the largest common block-aligned region so
+    # extraction works even when dimensions differ by a few pixels.
+    h = min(masked_image.shape[0], original_image.shape[0])
+    w = min(masked_image.shape[1], original_image.shape[1])
+    h_crop = (h // n) * n
+    w_crop = (w // n) * n
+
+    if h_crop == 0 or w_crop == 0:
         raise ValueError(
-            "marked and original images must have the same shape "
-            f"({masked_image.shape} vs {original_image.shape})"
+            f"images are too small to share any full {n}\u00d7{n} block region"
         )
+
+    masked_image = masked_image[:h_crop, :w_crop]
+    original_image = original_image[:h_crop, :w_crop]
 
     Uw, Sw, Vtw = _watermark_svd(original_watermark, full=True)
     num_sv = Sw.size
@@ -177,12 +201,11 @@ def extract_mask(
     gray_shape = _to_gray(original_watermark).shape
     m = float(min(gray_shape))
 
-    n = blocks.BLOCK_SIZE
     H = _hadamard_matrix(n)
 
     masked_stack = blocks.deconstruct(masked_image).astype(np.float64)
     orig_stack = blocks.deconstruct(original_image).astype(np.float64)
-    num_blocks = masked_stack.shape[0]  # guaranteed equal after the shape check
+    num_blocks = masked_stack.shape[0]
 
     # Batched forward Hadamard for both images.
     Bm = _batched_hadamard(masked_stack, H, n)
