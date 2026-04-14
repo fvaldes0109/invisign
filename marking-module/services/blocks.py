@@ -1,65 +1,93 @@
-import numpy as np
-import cv2
+"""
+Block splitting / stitching for the SVD + Walsh-Hadamard watermarker.
 
-# Set block size to 16x16 as per the paper's experiment
+The algorithm from the paper works on n×n blocks with n a power of two.
+These helpers turn a (H, W, 3) BGR image into a (num_blocks, 3, n, n)
+array (and back) using pure NumPy strides — no Python-level loops.
+
+Images whose dimensions are not multiples of ``BLOCK_SIZE`` are cropped
+to the nearest multiple; the cropped extent is returned via the shape
+of the reconstruction so the caller can re-pad if desired.
+"""
+from __future__ import annotations
+
+from typing import Tuple
+
+import numpy as np
+
+# 16×16 blocks match the experiments in the paper.
 BLOCK_SIZE = 16
 
 
-def deconstruct(image):
+def _grid(image_shape: Tuple[int, ...]) -> Tuple[int, int]:
+    """Return (blocks_per_col, blocks_per_row) for a given image shape."""
+    h, w = image_shape[:2]
+    return h // BLOCK_SIZE, w // BLOCK_SIZE
+
+
+def deconstruct(image: np.ndarray) -> np.ndarray:
     """
-    1. Splits the image into square blocks.
-    2. Splits each block into 3 separate channels (B, G, R).
-    Returns: A list of lists. Each item is [channel_b, channel_g, channel_r]
+    Split a BGR image into non-overlapping n×n blocks.
+
+    Returns an array of shape ``(num_blocks, channels, n, n)`` in row-major
+    order (left to right, top to bottom). Partial blocks at the right/bottom
+    edges are dropped.
     """
-    divided_data = []
-    h, w, _ = image.shape
+    if image.ndim != 3:
+        raise ValueError(f"deconstruct expects a 3-D array, got shape {image.shape}")
 
-    # Iterate in row-major order
-    for y in range(0, h, BLOCK_SIZE):
-        for x in range(0, w, BLOCK_SIZE):
-            # Check if the remaining area is smaller than BLOCK_SIZE (handling edges)
-            # The algorithm requires n x n blocks where n is power of 2.
-            # We skip partial blocks at edges to maintain stability.
-            if (y + BLOCK_SIZE) > h or (x + BLOCK_SIZE) > w:
-                continue
+    h, w, c = image.shape
+    blocks_per_col, blocks_per_row = _grid(image.shape)
+    n = BLOCK_SIZE
 
-            block = image[y:y + BLOCK_SIZE, x:x + BLOCK_SIZE]
-            b, g, r = cv2.split(block)
-            divided_data.append([b, g, r])
+    if blocks_per_col == 0 or blocks_per_row == 0:
+        raise ValueError(
+            f"image is smaller than one {n}×{n} block (got {h}×{w})"
+        )
 
-    return divided_data
+    # Crop to an exact multiple of BLOCK_SIZE on both sides.
+    cropped = image[: blocks_per_col * n, : blocks_per_row * n]
+
+    # (H, W, C) -> (rows_of_blocks, n, cols_of_blocks, n, C)
+    # -> (rows_of_blocks, cols_of_blocks, C, n, n)
+    # -> (num_blocks, C, n, n)
+    return np.ascontiguousarray(
+        cropped
+        .reshape(blocks_per_col, n, blocks_per_row, n, c)
+        .transpose(0, 2, 4, 1, 3)
+        .reshape(-1, c, n, n)
+    )
 
 
-def reconstruct(divided_channels, original_shape):
+def reconstruct(blocks_array: np.ndarray, original_shape: Tuple[int, ...]) -> np.ndarray:
     """
-    1. Merges the 3 channels back into color blocks.
-    2. Stitches the blocks back into the full image using original dimensions.
+    Stitch a ``(num_blocks, channels, n, n)`` array back into a
+    ``(new_h, new_w, channels)`` image, cropped to the largest multiple of
+    ``BLOCK_SIZE`` that fits in ``original_shape``.
     """
-    h, w, _ = original_shape
+    if blocks_array.ndim != 4:
+        raise ValueError(
+            f"reconstruct expects a 4-D array, got shape {blocks_array.shape}"
+        )
 
-    # Calculate how many full blocks fit in width and height
-    blocks_per_row = w // BLOCK_SIZE
-    blocks_per_col = h // BLOCK_SIZE
+    num_blocks, c, n, n2 = blocks_array.shape
+    if n != BLOCK_SIZE or n2 != BLOCK_SIZE:
+        raise ValueError(
+            f"blocks must be {BLOCK_SIZE}×{BLOCK_SIZE}, got {n}×{n2}"
+        )
 
-    # Reconstruct individual blocks
-    reconstructed_blocks = []
-    for channels in divided_channels:
-        merged_block = cv2.merge(channels)
-        reconstructed_blocks.append(merged_block)
+    blocks_per_col, blocks_per_row = _grid(original_shape)
+    expected = blocks_per_col * blocks_per_row
+    if num_blocks != expected:
+        raise ValueError(
+            f"block count mismatch: got {num_blocks}, expected "
+            f"{expected} for shape {original_shape}"
+        )
 
-    # Prepare a blank canvas
-    # Note: If original image wasn't divisible by BLOCK_SIZE,
-    # the result will be slightly cropped to the nearest block multiple.
-    new_h = blocks_per_col * BLOCK_SIZE
-    new_w = blocks_per_row * BLOCK_SIZE
-    full_image = np.zeros((new_h, new_w, 3), dtype=np.uint8)
-
-    # Stitch blocks
-    idx = 0
-    for y in range(0, new_h, BLOCK_SIZE):
-        for x in range(0, new_w, BLOCK_SIZE):
-            if idx < len(reconstructed_blocks):
-                full_image[y:y + BLOCK_SIZE, x:x + BLOCK_SIZE] = reconstructed_blocks[idx]
-                idx += 1
-
-    return full_image
+    # Inverse of deconstruct's transpose/reshape.
+    return (
+        blocks_array
+        .reshape(blocks_per_col, blocks_per_row, c, n, n)
+        .transpose(0, 3, 1, 4, 2)
+        .reshape(blocks_per_col * n, blocks_per_row * n, c)
+    )

@@ -1,14 +1,35 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import Response
-from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
+"""
+FastAPI entry point for the marking-module service.
+
+Exposes two endpoints:
+
+* ``POST /engrave`` — embed a watermark into a cover image.
+* ``POST /extract`` — recover the watermark from a marked image, given the
+  original image and the original watermark.
+
+Errors coming from invalid user input (``ValueError``) are surfaced as
+``400 Bad Request`` with a short, sanitized message. Unexpected errors
+return ``500`` with a generic body; the real exception is logged so an
+operator can inspect it without leaking internals to the client.
+"""
+from __future__ import annotations
+
+import logging
+import os
+
 import cv2
+import numpy as np
+import uvicorn
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 
-# Import controllers
-from controllers import engrave_mask_controller
-from controllers import extract_mask_controller
+from controllers import engrave_mask_controller, extract_mask_controller
 
-app = FastAPI()
+logger = logging.getLogger("marking-module")
+logging.basicConfig(level=logging.INFO)
+
+app = FastAPI(title="Marking Module", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,51 +39,62 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+def _encode_jpeg(image: np.ndarray) -> bytes:
+    ok, encoded = cv2.imencode(".jpg", image)
+    if not ok:
+        raise HTTPException(status_code=500, detail="failed to encode result image")
+    return encoded.tobytes()
+
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "message": "Watermarking service is healthy."}
 
+
 @app.post("/engrave")
-async def engrave_images(image: UploadFile = File(...), watermark: UploadFile = File(...)):
+async def engrave_images(
+    image: UploadFile = File(...),
+    watermark: UploadFile = File(...),
+):
+    image_bytes = await image.read()
+    watermark_bytes = await watermark.read()
+
     try:
-        # Read image files into bytes
-        image_bytes = await image.read()
-        watermark_bytes = await watermark.read()
-
-        # Pass bytes to the controller
         result_image = engrave_mask_controller.process(image_bytes, watermark_bytes)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception:
+        logger.exception("/engrave failed")
+        raise HTTPException(status_code=500, detail="internal error")
 
-        # Encode the result back to an image format (e.g., JPEG) for response
-        _, encoded_img = cv2.imencode('.jpg', result_image)
-
-        return Response(content=encoded_img.tobytes(), media_type="image/jpeg")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return Response(content=_encode_jpeg(result_image), media_type="image/jpeg")
 
 
 @app.post("/extract")
-async def extract_images(marked_image: UploadFile = File(...), original_image: UploadFile = File(...), watermark: UploadFile = File(...)):
+async def extract_images(
+    marked_image: UploadFile = File(...),
+    original_image: UploadFile = File(...),
+    watermark: UploadFile = File(...),
+):
+    marked_image_bytes = await marked_image.read()
+    original_image_bytes = await original_image.read()
+    watermark_bytes = await watermark.read()
+
     try:
-        # Read image files into bytes
-        marked_image_bytes = await marked_image.read()
-        original_image_bytes = await original_image.read()
-        watermark_bytes = await watermark.read()
+        result_image = extract_mask_controller.process(
+            marked_image_bytes, original_image_bytes, watermark_bytes
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception:
+        logger.exception("/extract failed")
+        raise HTTPException(status_code=500, detail="internal error")
 
-        # Pass bytes to the controller
-        result_image = extract_mask_controller.process(marked_image_bytes, original_image_bytes, watermark_bytes)
-
-        # Encode the result back to an image format (e.g., JPEG) for response
-        _, encoded_img = cv2.imencode('.jpg', result_image)
-
-        return Response(content=encoded_img.tobytes(), media_type="image/jpeg")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return Response(content=_encode_jpeg(result_image), media_type="image/jpeg")
 
 
 if __name__ == "__main__":
-    import os
     host = os.getenv("WATERMARK_SERVICE_HOST", "0.0.0.0")
     port = int(os.getenv("WATERMARK_SERVICE_PORT", "8000"))
     uvicorn.run(app, host=host, port=port)

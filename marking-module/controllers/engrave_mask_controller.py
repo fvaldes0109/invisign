@@ -1,21 +1,21 @@
+"""HTTP-layer glue for the /engrave endpoint."""
+from __future__ import annotations
+
 import cv2
 import numpy as np
-import services.masking as masking
 
-def process(image_bytes, watermark_bytes):
-    # Convert bytes data to numpy array
-    nparr_img = np.frombuffer(image_bytes, np.uint8)
-    nparr_mark = np.frombuffer(watermark_bytes, np.uint8)
+from services import masking
 
-    # Decode image
-    image = cv2.imdecode(nparr_img, cv2.IMREAD_COLOR)
-    mark = cv2.imdecode(nparr_mark, cv2.IMREAD_COLOR)
 
-    if image is None or mark is None:
-        raise ValueError("Could not decode one or more images.")
+def _decode(image_bytes: bytes, role: str) -> np.ndarray:
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError(f"could not decode {role} — expected a valid image file")
+    return image
 
-    # Call the external masking method
-    # This assumes masking.mask_image returns a cv2 image (numpy array)
-    result = masking.mask_image(image, mark)
 
-    return result
+def process(image_bytes: bytes, watermark_bytes: bytes) -> np.ndarray:
+    image = _decode(image_bytes, "cover image")
+    mark = _decode(watermark_bytes, "watermark")
+    return masking.mask_image(image, mark)
