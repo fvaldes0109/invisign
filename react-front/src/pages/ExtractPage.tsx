@@ -136,14 +136,30 @@ const s: Record<string, React.CSSProperties> = {
         objectFit: 'cover' as const,
         display: 'block',
     },
-    engravingLabel: {
+    engravingFooter: {
+        display: 'flex',
+        alignItems: 'center',
         padding: '0.4rem 0.6rem',
+        gap: '0.35rem',
+        minWidth: 0,
+    },
+    engravingLabel: {
         fontSize: '0.72rem',
         fontWeight: 600,
         color: c.textMuted,
         overflow: 'hidden',
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap' as const,
+        flex: 1,
+        minWidth: 0,
+    },
+    watermarkThumb: {
+        width: 20,
+        height: 20,
+        borderRadius: 4,
+        objectFit: 'cover' as const,
+        border: `1px solid ${c.border}`,
+        flexShrink: 0,
     },
 
     // File upload
@@ -334,9 +350,19 @@ export function ExtractPage() {
                                         alt="engraved"
                                         style={s.engravingThumb}
                                     />
-                                    <span style={s.engravingLabel} title={e.image?.name}>
-                                        {e.image?.name ?? e.image_id}
-                                    </span>
+                                    <div style={s.engravingFooter}>
+                                        <span style={s.engravingLabel} title={e.image?.name}>
+                                            {e.image?.name ?? e.image_id}
+                                        </span>
+                                        {e.watermark?.thumbnail_url && (
+                                            <img
+                                                src={e.watermark.thumbnail_url}
+                                                alt={e.watermark.name}
+                                                title={e.watermark.name}
+                                                style={s.watermarkThumb}
+                                            />
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>
