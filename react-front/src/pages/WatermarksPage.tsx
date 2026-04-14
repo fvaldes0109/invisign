@@ -356,7 +356,23 @@ export function WatermarksPage() {
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         setUploadError('');
-        setSelectedFile(e.target.files?.[0] ?? null);
+        const file = e.target.files?.[0] ?? null;
+        if (!file) { setSelectedFile(null); return; }
+
+        const url = URL.createObjectURL(file);
+        const img = new window.Image();
+        img.onload = () => {
+            URL.revokeObjectURL(url);
+            if (img.naturalWidth !== img.naturalHeight) {
+                setUploadError('The watermark must be square — width and height must be equal.');
+                setSelectedFile(null);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+            } else {
+                setSelectedFile(file);
+            }
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); setSelectedFile(file); };
+        img.src = url;
     }
 
     async function handleUpload() {
@@ -369,8 +385,8 @@ export function WatermarksPage() {
             setSelectedFile(null);
             setWatermarkName('');
             if (fileInputRef.current) fileInputRef.current.value = '';
-        } catch {
-            setUploadError('Upload failed. Please try again.');
+        } catch (err) {
+            setUploadError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
         } finally {
             setUploading(false);
         }
@@ -407,7 +423,7 @@ export function WatermarksPage() {
                             <span style={s.uploadZoneIcon}>📂</span>
                             {selectedFile
                                 ? <span style={s.uploadZoneFilename}>{selectedFile.name}</span>
-                                : <span style={s.uploadZoneText}>Click to select an image — JPEG, PNG, WebP</span>
+                                : <span style={s.uploadZoneText}>Click to select an image — JPEG, PNG, WebP · must be square</span>
                             }
                         </div>
                         <input

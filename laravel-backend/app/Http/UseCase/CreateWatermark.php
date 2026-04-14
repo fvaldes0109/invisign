@@ -4,9 +4,9 @@ namespace App\Http\UseCase;
 
 use App\Http\Entity\Watermark;
 use App\Http\Repository\WatermarkRepository;
+use GdImage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Ramsey\Uuid\Uuid;
 
 class CreateWatermark
@@ -24,8 +24,23 @@ class CreateWatermark
         $imagePath     = "watermarks/{$userId}/{$id}.{$ext}";
         $thumbnailPath = "watermarks/{$userId}/thumbnails/{$id}_thumb.{$ext}";
 
-        Storage::disk('public')->put($imagePath, file_get_contents($file->getRealPath()));
-        Storage::disk('public')->put($thumbnailPath, $this->makeThumbnail($file->getRealPath(), $ext));
+        // Load the uploaded image; resize to the nearest power-of-two square when
+        // the side length is not already a power of two.
+        $source = $this->loadGd($file->getRealPath(), $ext);
+        $side   = imagesx($source); // width == height guaranteed by controller validation
+
+        if (!$this->isPowerOfTwo($side)) {
+            $target  = $this->nearestPowerOfTwo($side);
+            $resized = $this->createCanvas($target, $ext);
+            imagecopyresampled($resized, $source, 0, 0, 0, 0, $target, $target, $side, $side);
+            imagedestroy($source);
+            $source = $resized;
+            $side   = $target;
+        }
+
+        Storage::disk('public')->put($imagePath,     $this->encode($source, $ext));
+        Storage::disk('public')->put($thumbnailPath, $this->thumbnail($source, $side, $ext));
+        imagedestroy($source);
 
         $watermark = Watermark::create(
             id:            $id,
@@ -40,46 +55,59 @@ class CreateWatermark
         return $watermark;
     }
 
-    private function makeThumbnail(string $sourcePath, string $ext): string
+    // ─── GD helpers ──────────────────────────────────────────────────────────
+
+    private function loadGd(string $path, string $ext): GdImage
     {
-        $source = match ($ext) {
-            'png'  => imagecreatefrompng($sourcePath),
-            'webp' => imagecreatefromwebp($sourcePath),
-            default => imagecreatefromjpeg($sourcePath),
+        return match ($ext) {
+            'png'  => imagecreatefrompng($path),
+            'webp' => imagecreatefromwebp($path),
+            default => imagecreatefromjpeg($path),
         };
+    }
 
-        $origW = imagesx($source);
-        $origH = imagesy($source);
-
-        $max  = 300;
-        if ($origW >= $origH) {
-            $newW = $max;
-            $newH = (int) round($origH * $max / $origW);
-        } else {
-            $newH = $max;
-            $newW = (int) round($origW * $max / $origH);
-        }
-
-        $thumb = imagecreatetruecolor($newW, $newH);
-
+    private function createCanvas(int $size, string $ext): GdImage
+    {
+        $img = imagecreatetruecolor($size, $size);
         if ($ext === 'png') {
-            imagealphablending($thumb, false);
-            imagesavealpha($thumb, true);
+            imagealphablending($img, false);
+            imagesavealpha($img, true);
         }
+        return $img;
+    }
 
-        imagecopyresampled($thumb, $source, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
-
+    private function encode(GdImage $img, string $ext): string
+    {
         ob_start();
         match ($ext) {
-            'png'  => imagepng($thumb),
-            'webp' => imagewebp($thumb, null, 85),
-            default => imagejpeg($thumb, null, 85),
+            'png'  => imagepng($img),
+            'webp' => imagewebp($img, null, 85),
+            default => imagejpeg($img, null, 85),
         };
-        $data = ob_get_clean();
+        return ob_get_clean();
+    }
 
-        imagedestroy($source);
+    private function thumbnail(GdImage $source, int $side, string $ext): string
+    {
+        $size  = min($side, 300);
+        $thumb = $this->createCanvas($size, $ext);
+        imagecopyresampled($thumb, $source, 0, 0, 0, 0, $size, $size, $side, $side);
+        $data  = $this->encode($thumb, $ext);
         imagedestroy($thumb);
-
         return $data;
+    }
+
+    // ─── Power-of-two helpers ─────────────────────────────────────────────────
+
+    private function isPowerOfTwo(int $n): bool
+    {
+        return $n > 0 && ($n & ($n - 1)) === 0;
+    }
+
+    private function nearestPowerOfTwo(int $n): int
+    {
+        $lower = (int) (2 ** (int) floor(log($n, 2)));
+        $upper = $lower * 2;
+        return ($n - $lower) <= ($upper - $n) ? $lower : $upper;
     }
 }

@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 
 class WatermarkController extends Controller
 {
@@ -49,9 +50,18 @@ class WatermarkController extends Controller
             'name'  => 'required|string|max:255',
         ]);
 
+        $file = $request->file('image');
+        $size = getimagesize($file->getRealPath());
+
+        if ($size === false || $size[0] !== $size[1]) {
+            throw ValidationException::withMessages([
+                'image' => ['The watermark image must be square (width must equal height).'],
+            ]);
+        }
+
         $watermark = $this->createWatermark->execute(
             userId: $request->user()->id,
-            file:   $request->file('image'),
+            file:   $file,
             name:   $request->input('name'),
         );
 

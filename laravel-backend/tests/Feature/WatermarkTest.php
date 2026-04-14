@@ -123,7 +123,7 @@ class WatermarkTest extends TestCase
         Storage::fake('public');
 
         $user = User::factory()->create();
-        $file = UploadedFile::fake()->image('photo.jpg', 800, 600);
+        $file = UploadedFile::fake()->image('photo.jpg', 256, 256);
 
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/watermarks', [
@@ -166,6 +166,69 @@ class WatermarkTest extends TestCase
             ->postJson('/api/watermarks', ['image' => $file])
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['image']);
+    }
+
+    public function test_store_returns_422_for_non_square_image(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $file = UploadedFile::fake()->image('mark.jpg', 800, 600);
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/watermarks', [
+                'image' => $file,
+                'name'  => 'Non-Square Mark',
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['image']);
+    }
+
+    public function test_store_resizes_non_power_of_two_square_to_nearest_power_of_two(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        // 300×300 — nearest power of two is 256 (300-256=44 < 512-300=212)
+        $file = UploadedFile::fake()->image('mark.jpg', 300, 300);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/watermarks', [
+                'image' => $file,
+                'name'  => 'Resized Mark',
+            ]);
+
+        $response->assertOk();
+
+        $id     = $response->json('data.id');
+        $stored = Storage::disk('public')->get("watermarks/{$user->id}/{$id}.jpg");
+        [$w, $h] = getimagesizefromstring($stored);
+
+        $this->assertSame(256, $w);
+        $this->assertSame(256, $h);
+    }
+
+    public function test_store_does_not_resize_power_of_two_square_image(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $file = UploadedFile::fake()->image('mark.jpg', 512, 512);
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->postJson('/api/watermarks', [
+                'image' => $file,
+                'name'  => 'Exact Mark',
+            ]);
+
+        $response->assertOk();
+
+        $id     = $response->json('data.id');
+        $stored = Storage::disk('public')->get("watermarks/{$user->id}/{$id}.jpg");
+        [$w, $h] = getimagesizefromstring($stored);
+
+        $this->assertSame(512, $w);
+        $this->assertSame(512, $h);
     }
 
     public function test_store_requires_authentication(): void

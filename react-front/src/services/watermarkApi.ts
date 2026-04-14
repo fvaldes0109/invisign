@@ -13,7 +13,15 @@ function authHeaders(): HeadersInit {
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
-    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    if (!res.ok) {
+        if (res.status === 422) {
+            const body = await res.json().catch(() => ({}));
+            const errors: Record<string, string[]> = body.errors ?? {};
+            const firstError = Object.values(errors).flat()[0];
+            throw new Error(firstError ?? body.message ?? 'Validation failed');
+        }
+        throw new Error(`Request failed: ${res.status}`);
+    }
     return res.json() as Promise<T>;
 }
 
