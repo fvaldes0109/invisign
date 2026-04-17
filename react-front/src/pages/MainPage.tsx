@@ -17,7 +17,15 @@ const colors = {
     warning: '#F59E0B',
 };
 
-const styles: Record<string, React.CSSProperties> = {
+type StyleFunction =
+    | ((color: string) => React.CSSProperties)
+    | ((from: string, to: string) => React.CSSProperties)
+    | ((pct: number, color: string) => React.CSSProperties)
+    | ((pass: boolean) => React.CSSProperties);
+
+type StyleMap = Record<string, React.CSSProperties | StyleFunction>;
+
+const styles = {
     page: {
         background: colors.bg,
         color: colors.text,
@@ -509,7 +517,7 @@ const styles: Record<string, React.CSSProperties> = {
         flexDirection: 'column' as const,
         gap: '0.75rem',
     },
-    attackItem: (pass: boolean): React.CSSProperties => ({
+    attackItem: (_pass: boolean): React.CSSProperties => ({
         display: 'flex',
         alignItems: 'center',
         gap: '0.9rem',
@@ -642,7 +650,7 @@ const styles: Record<string, React.CSSProperties> = {
         color: colors.textDim,
         fontSize: '0.85rem',
     },
-};
+} satisfies StyleMap;
 
 const attacks = [
     { label: 'JPEG compression', pass: true },

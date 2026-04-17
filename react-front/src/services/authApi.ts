@@ -28,9 +28,10 @@ async function request<T>(path: string, options: RequestInit): Promise<T> {
     if (!res.ok) {
         const message =
             data?.message ||
-            Object.values(data?.errors ?? {})[0]?.[0] ||
+            (Object.values((data?.errors as Record<string, string[]>) ?? {})[0]?.[0]) ||
             'Request failed';
-        throw new Error(message as string);
+
+        throw new Error(message);
     }
 
     return data as T;

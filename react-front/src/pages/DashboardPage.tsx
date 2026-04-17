@@ -20,7 +20,9 @@ const c = {
     success: '#10B981',
 };
 
-const s: Record<string, React.CSSProperties> = {
+type StyleMap = Record<string, React.CSSProperties | ((color: string) => React.CSSProperties)>;
+
+const s = {
     page: {
         minHeight: '100vh',
         background: c.bg,
@@ -162,7 +164,7 @@ const s: Record<string, React.CSSProperties> = {
         fontWeight: 600,
         marginTop: 'auto',
     }),
-};
+} satisfies StyleMap;
 
 interface HasThumbnail {
     id: string;

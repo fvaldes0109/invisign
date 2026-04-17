@@ -19,7 +19,9 @@ const c = {
     errorBorder: 'rgba(248,113,113,0.25)',
 };
 
-const s: Record<string, React.CSSProperties> = {
+type StyleMap = Record<string, React.CSSProperties | ((color: string) => React.CSSProperties)>;
+
+const s = {
     page: {
         minHeight: '100vh',
         display: 'grid',
@@ -283,7 +285,7 @@ const s: Record<string, React.CSSProperties> = {
         background: c.border,
         margin: '1.5rem 0',
     },
-};
+} satisfies StyleMap;
 
 const features = [
     { icon: '🔒', text: 'Invisible watermarks, zero visual impact' },
