@@ -1,0 +1,15 @@
+FROM node:20-slim AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+ARG VITE_BACKEND_HOST
+ARG VITE_BACKEND_PORT
+ARG VITE_WATERMARK_SERVICE_HOST
+ARG VITE_WATERMARK_SERVICE_PORT
+RUN npm run build
+
+FROM nginx:1.27-alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY docker/frontend-nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80

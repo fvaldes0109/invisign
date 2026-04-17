@@ -1,4 +1,8 @@
 .idea
 .env
+.env.prod
+laravel-backend/.env.prod
+marking-module/.env.prod
+react-front/.env.prod
 *.pdf
 

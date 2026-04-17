@@ -1,0 +1,52 @@
+resolver 127.0.0.11 valid=30s;
+
+# React SPA
+server {
+    listen 80;
+    server_name app.${DOMAIN};
+
+    location / {
+        set $upstream http://frontend:80;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+    }
+}
+
+# Laravel REST API
+server {
+    listen 80;
+    server_name api.${DOMAIN};
+
+    client_max_body_size 100M;
+
+    location / {
+        set $upstream http://laravel:8080;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 120s;
+    }
+}
+
+# Python watermarking microservice
+server {
+    listen 80;
+    server_name marking.${DOMAIN};
+
+    client_max_body_size 100M;
+
+    location / {
+        set $upstream http://backend:8000;
+        proxy_pass $upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_read_timeout 120s;
+    }
+}
