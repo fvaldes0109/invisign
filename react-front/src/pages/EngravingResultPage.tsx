@@ -1,4 +1,4 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { deleteEngraving, type Engraving } from '../services/engravingApi';
 import type { UserImage } from '../services/imageApi';
 import type { Watermark } from '../services/watermarkApi';
@@ -30,37 +30,6 @@ const s: Record<string, React.CSSProperties> = {
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
         display: 'flex',
         flexDirection: 'column',
-    },
-    topbar: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '1rem',
-        padding: '1.1rem 2.5rem',
-        borderBottom: `1px solid ${c.border}`,
-        background: 'rgba(7,9,15,0.85)',
-        backdropFilter: 'blur(12px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-    },
-    backLink: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.4rem',
-        textDecoration: 'none',
-        color: c.textMuted,
-        fontSize: '0.85rem',
-        fontWeight: 500,
-        padding: '0.4rem 0.8rem',
-        borderRadius: 8,
-        border: `1px solid ${c.border}`,
-        background: c.surface,
-    },
-    topbarTitle: {
-        fontSize: '1rem',
-        fontWeight: 700,
-        color: c.text,
-        letterSpacing: '-0.02em',
     },
     main: {
         flex: 1,
@@ -220,11 +189,6 @@ export function EngravingResultPage() {
 
     return (
         <div style={s.page}>
-            <header style={s.topbar}>
-                <Link to="/dashboard/images" style={s.backLink}>← My Images</Link>
-                <span style={s.topbarTitle}>Engraving Result</span>
-            </header>
-
             <main style={s.main}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <span style={s.badge}>Watermark embedded</span>

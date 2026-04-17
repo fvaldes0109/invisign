@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { logout } from '../services/authApi';
+import { Link } from 'react-router-dom';
 import { fetchWatermarkCount, fetchWatermarks } from '../services/watermarkApi';
 import { fetchImageCount, fetchImages } from '../services/imageApi';
 import { fetchEngravings } from '../services/engravingApi';
@@ -29,80 +28,6 @@ const s: Record<string, React.CSSProperties> = {
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
         display: 'flex',
         flexDirection: 'column',
-    },
-    topbar: {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '1.1rem 2.5rem',
-        borderBottom: `1px solid ${c.border}`,
-        background: 'rgba(7,9,15,0.85)',
-        backdropFilter: 'blur(12px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-    },
-    logoLink: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.6rem',
-        textDecoration: 'none',
-    },
-    logoMark: {
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        background: `linear-gradient(135deg, ${c.primary}, ${c.accent})`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontWeight: 800,
-        fontSize: '0.9rem',
-        color: '#fff',
-    },
-    logoText: {
-        fontSize: '1.05rem',
-        fontWeight: 700,
-        color: c.text,
-        letterSpacing: '-0.02em',
-    },
-    topbarRight: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '1rem',
-    },
-    userPill: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.6rem',
-        padding: '0.4rem 0.9rem',
-        borderRadius: 100,
-        background: c.surface,
-        border: `1px solid ${c.border}`,
-        fontSize: '0.82rem',
-        color: c.textMuted,
-    },
-    avatar: {
-        width: 24,
-        height: 24,
-        borderRadius: '50%',
-        background: `linear-gradient(135deg, ${c.primary}, ${c.accent})`,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '0.65rem',
-        fontWeight: 700,
-        color: '#fff',
-    },
-    logoutBtn: {
-        padding: '0.45rem 1rem',
-        borderRadius: 8,
-        border: `1px solid ${c.border}`,
-        background: 'transparent',
-        color: c.textMuted,
-        fontSize: '0.82rem',
-        fontWeight: 500,
-        cursor: 'pointer',
     },
     main: {
         flex: 1,
@@ -264,7 +189,6 @@ function ThumbStrip({ items }: ThumbStripProps) {
 }
 
 export function DashboardPage() {
-    const navigate = useNavigate();
     const [watermarkCount, setWatermarkCount] = useState<number | null>(null);
     const [imageCount, setImageCount] = useState<number | null>(null);
     const [engravingCount, setEngravingCount]   = useState<number | null>(null);
@@ -280,13 +204,6 @@ export function DashboardPage() {
         fetchEngravings().then(list => setEngravingCount(list.length)).catch(() => setEngravingCount(0));
         fetchExtractionCount().then(setExtractionCount).catch(() => setExtractionCount(0));
     }, []);
-
-    async function handleLogout() {
-        try { await logout(); } finally {
-            localStorage.removeItem('token');
-            navigate('/login');
-        }
-    }
 
     const stats = [
         {
@@ -313,20 +230,6 @@ export function DashboardPage() {
 
     return (
         <div style={s.page}>
-            <header style={s.topbar}>
-                <Link to="/" style={s.logoLink}>
-                    <div style={s.logoMark}>W</div>
-                    <span style={s.logoText}>WaterMark</span>
-                </Link>
-                <div style={s.topbarRight}>
-                    <div style={s.userPill}>
-                        <div style={s.avatar}>U</div>
-                        My account
-                    </div>
-                    <button style={s.logoutBtn} onClick={handleLogout}>Log out</button>
-                </div>
-            </header>
-
             <main style={s.main}>
                 <div style={s.pageHeader}>
                     <div style={s.pageLabel}>Overview</div>

@@ -5,12 +5,12 @@ import { DashboardPage } from './pages/DashboardPage';
 import { WatermarksPage } from './pages/WatermarksPage';
 import { ImagesPage } from './pages/ImagesPage';
 import { EngravingResultPage } from './pages/EngravingResultPage';
-import { EmbedPage } from './pages/EmbedPage';
 import { ExtractPage } from './pages/ExtractPage';
 import { EngravingsPage } from './pages/EngravingsPage';
 import { ExtractionsPage } from './pages/ExtractionsPage';
 import { MainPage } from './pages/MainPage.tsx';
 import { NotFoundPage } from './pages/NotFoundPage.tsx';
+import { DashboardLayout } from './components/DashboardLayout';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('token');
@@ -22,70 +22,23 @@ function App() {
         <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+
             <Route
-                path="/dashboard"
                 element={
                     <ProtectedRoute>
-                        <DashboardPage />
+                        <DashboardLayout />
                     </ProtectedRoute>
                 }
-            />
-            <Route
-                path="/dashboard/watermarks"
-                element={
-                    <ProtectedRoute>
-                        <WatermarksPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/dashboard/images"
-                element={
-                    <ProtectedRoute>
-                        <ImagesPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/dashboard/engravings"
-                element={
-                    <ProtectedRoute>
-                        <EngravingsPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/dashboard/engravings/:id"
-                element={
-                    <ProtectedRoute>
-                        <EngravingResultPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/dashboard/extractions"
-                element={
-                    <ProtectedRoute>
-                        <ExtractionsPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/dashboard/embed"
-                element={
-                    <ProtectedRoute>
-                        <EmbedPage />
-                    </ProtectedRoute>
-                }
-            />
-            <Route
-                path="/dashboard/extract"
-                element={
-                    <ProtectedRoute>
-                        <ExtractPage />
-                    </ProtectedRoute>
-                }
-            />
+            >
+                <Route path="/dashboard"                element={<DashboardPage />} />
+                <Route path="/dashboard/watermarks"     element={<WatermarksPage />} />
+                <Route path="/dashboard/images"         element={<ImagesPage />} />
+                <Route path="/dashboard/engravings"     element={<EngravingsPage />} />
+                <Route path="/dashboard/engravings/:id" element={<EngravingResultPage />} />
+                <Route path="/dashboard/extractions"    element={<ExtractionsPage />} />
+                <Route path="/dashboard/extract"        element={<ExtractPage />} />
+            </Route>
+
             <Route path="/" element={<MainPage />} />
             <Route path="*" element={<NotFoundPage />} />
         </Routes>

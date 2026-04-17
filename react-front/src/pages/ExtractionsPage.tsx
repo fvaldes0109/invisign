@@ -23,38 +23,6 @@ const s: Record<string, React.CSSProperties> = {
         display: 'flex',
         flexDirection: 'column',
     },
-    topbar: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '1rem',
-        padding: '1.1rem 2.5rem',
-        borderBottom: `1px solid ${c.border}`,
-        background: 'rgba(7,9,15,0.85)',
-        backdropFilter: 'blur(12px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-    },
-    backLink: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.4rem',
-        textDecoration: 'none',
-        color: c.textMuted,
-        fontSize: '0.85rem',
-        fontWeight: 500,
-        padding: '0.4rem 0.8rem',
-        borderRadius: 8,
-        border: `1px solid ${c.border}`,
-        background: c.surface,
-    },
-    topbarTitle: {
-        fontSize: '1rem',
-        fontWeight: 700,
-        color: c.text,
-        letterSpacing: '-0.02em',
-    },
-    topbarRight: { marginLeft: 'auto' },
     newBtn: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -212,19 +180,12 @@ export function ExtractionsPage() {
 
     return (
         <div style={s.page}>
-            <header style={s.topbar}>
-                <Link to="/dashboard" style={s.backLink}>← Dashboard</Link>
-                <span style={s.topbarTitle}>My Extractions</span>
-                <div style={s.topbarRight}>
-                    <Link to="/dashboard/extract" style={s.newBtn}>+ New extraction</Link>
-                </div>
-            </header>
-
             <main style={s.main}>
                 <div>
                     <div style={s.listHeader}>
                         <span style={s.listTitle}>Results</span>
                         {!loading && <span style={s.listCount}>{extractions.length} total</span>}
+                        <Link to="/dashboard/extract" style={s.newBtn}>+ New extraction</Link>
                     </div>
 
                     {loading ? (
