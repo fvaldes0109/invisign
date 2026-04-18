@@ -3,7 +3,7 @@ resolver 127.0.0.11 valid=30s;
 # React SPA
 server {
     listen 80;
-    server_name app.${DOMAIN};
+    server_name app.invisign.com;
 
     location / {
         set $upstream http://frontend:80;
@@ -18,7 +18,7 @@ server {
 # Laravel REST API
 server {
     listen 80;
-    server_name api.${DOMAIN};
+    server_name api.invisign.com;
 
     client_max_body_size 100M;
 
@@ -36,7 +36,7 @@ server {
 # Python watermarking microservice
 server {
     listen 80;
-    server_name marking.${DOMAIN};
+    server_name marking.invisign.com;
 
     client_max_body_size 100M;
 
