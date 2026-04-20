@@ -141,6 +141,20 @@ const s: Record<string, React.CSSProperties> = {
         gap: '1rem',
         flexWrap: 'wrap' as const,
     },
+    attackBtn: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        padding: '0.7rem 1.5rem',
+        borderRadius: 10,
+        border: `1px solid rgba(6,182,212,0.35)`,
+        background: 'rgba(6,182,212,0.08)',
+        color: c.accent,
+        fontWeight: 700,
+        fontSize: '0.9rem',
+        cursor: 'pointer',
+        alignSelf: 'flex-start',
+    },
     deleteBtn: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -214,6 +228,16 @@ export function EngravingResultPage() {
                     >
                         ↓ Download engraved image
                     </a>
+                    <button
+                        style={s.attackBtn}
+                        onClick={() =>
+                            navigate(`/dashboard/engravings/${engraving.id}/attack-test`, {
+                                state: { engraving, image, watermark },
+                            })
+                        }
+                    >
+                        Test attacks
+                    </button>
                     <button
                         style={{
                             ...s.deleteBtn,

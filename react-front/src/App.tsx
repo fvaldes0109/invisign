@@ -5,6 +5,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { WatermarksPage } from './pages/WatermarksPage';
 import { ImagesPage } from './pages/ImagesPage';
 import { EngravingResultPage } from './pages/EngravingResultPage';
+import { AttackTestPage } from './pages/AttackTestPage';
 import { ExtractPage } from './pages/ExtractPage';
 import { EngravingsPage } from './pages/EngravingsPage';
 import { ExtractionsPage } from './pages/ExtractionsPage';
@@ -35,6 +36,7 @@ function App() {
                 <Route path="/dashboard/images"         element={<ImagesPage />} />
                 <Route path="/dashboard/engravings"     element={<EngravingsPage />} />
                 <Route path="/dashboard/engravings/:id" element={<EngravingResultPage />} />
+                <Route path="/dashboard/engravings/:id/attack-test" element={<AttackTestPage />} />
                 <Route path="/dashboard/extractions"    element={<ExtractionsPage />} />
                 <Route path="/dashboard/extract"        element={<ExtractPage />} />
             </Route>

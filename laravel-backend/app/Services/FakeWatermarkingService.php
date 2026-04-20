@@ -14,6 +14,11 @@ class FakeWatermarkingService implements WatermarkingServiceInterface
         return $this->makeJpeg();
     }
 
+    public function applyAttack(string $imageContents, string $attackType, array $params = []): string
+    {
+        return $this->makeJpeg();
+    }
+
     private function makeJpeg(): string
     {
         // Returns a minimal 1×1 white JPEG so storage assertions work

@@ -22,4 +22,14 @@ interface WatermarkingServiceInterface
      * @return string                         Raw bytes of the extracted watermark image.
      */
     public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): string;
+
+    /**
+     * Apply a named attack transformation to an image.
+     *
+     * @param  string  $imageContents Raw bytes of the image to transform.
+     * @param  string  $attackType    One of: rotate, mirror, noise, brightness, compression.
+     * @param  array   $params        Optional attack parameters (e.g. angle, std, factor, quality).
+     * @return string                 Raw bytes of the transformed image.
+     */
+    public function applyAttack(string $imageContents, string $attackType, array $params = []): string;
 }

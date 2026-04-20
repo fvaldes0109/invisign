@@ -1,11 +1,13 @@
 """
 FastAPI entry point for the marking-module service.
 
-Exposes two endpoints:
+Exposes three endpoints:
 
-* ``POST /engrave`` — embed a watermark into a cover image.
-* ``POST /extract`` — recover the watermark from a marked image, given the
+* ``POST /engrave``       — embed a watermark into a cover image.
+* ``POST /extract``       — recover the watermark from a marked image, given the
   original image and the original watermark.
+* ``POST /apply-attack``  — apply a named attack transformation to an image
+  (rotate, mirror, noise, brightness, compression).
 
 Errors coming from invalid user input (``ValueError``) are surfaced as
 ``400 Bad Request`` with a short, sanitized message. Unexpected errors
@@ -14,17 +16,18 @@ operator can inspect it without leaking internals to the client.
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 
 import cv2
 import numpy as np
 import uvicorn
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
-from controllers import engrave_mask_controller, extract_mask_controller
+from controllers import apply_attack_controller, engrave_mask_controller, extract_mask_controller
 
 logger = logging.getLogger("marking-module")
 logging.basicConfig(level=logging.INFO)
@@ -89,6 +92,30 @@ async def extract_images(
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception:
         logger.exception("/extract failed")
+        raise HTTPException(status_code=500, detail="internal error")
+
+    return Response(content=_encode_jpeg(result_image), media_type="image/jpeg")
+
+
+@app.post("/apply-attack")
+async def apply_attack(
+    image: UploadFile = File(...),
+    attack: str = Form(...),
+    params: str = Form("{}"),
+):
+    image_bytes = await image.read()
+
+    try:
+        parsed_params = json.loads(params)
+    except json.JSONDecodeError as e:
+        raise HTTPException(status_code=400, detail=f"invalid params JSON: {e}") from e
+
+    try:
+        result_image = apply_attack_controller.process(image_bytes, attack, parsed_params)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception:
+        logger.exception("/apply-attack failed")
         raise HTTPException(status_code=500, detail="internal error")
 
     return Response(content=_encode_jpeg(result_image), media_type="image/jpeg")

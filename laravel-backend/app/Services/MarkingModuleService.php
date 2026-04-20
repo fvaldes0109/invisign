@@ -57,4 +57,27 @@ class MarkingModuleService implements WatermarkingServiceInterface
 
         return $response->getBody()->getContents();
     }
+
+    public function applyAttack(string $imageContents, string $attackType, array $params = []): string
+    {
+        $response = $this->http->post("{$this->baseUrl}/apply-attack", [
+            'multipart' => [
+                [
+                    'name'     => 'image',
+                    'contents' => $imageContents,
+                    'filename' => 'image.jpg',
+                ],
+                [
+                    'name'     => 'attack',
+                    'contents' => $attackType,
+                ],
+                [
+                    'name'     => 'params',
+                    'contents' => json_encode((object) $params),
+                ],
+            ],
+        ]);
+
+        return $response->getBody()->getContents();
+    }
 }

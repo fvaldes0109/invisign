@@ -34,7 +34,7 @@ from . import blocks
 # smaller value is sufficient to make the watermark recoverable while
 # staying imperceptible. The value below is the project's tuned default;
 # larger values give more robustness at the cost of visible artefacts.
-ALPHA = 0.0001
+ALPHA = 0.00005
 
 
 # ---------------------------------------------------------------------------

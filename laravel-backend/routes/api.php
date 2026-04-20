@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttackTestController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EngravingController;
 use App\Http\Controllers\ExtractionController;
@@ -44,4 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('engravings',           [EngravingController::class, 'index'])  ->name('engravings.index');
     Route::post('engravings',          [EngravingController::class, 'store'])  ->name('engravings.store');
     Route::delete('engravings/{id}',   [EngravingController::class, 'destroy'])->name('engravings.destroy');
+
+    Route::get('attack-tests',         [AttackTestController::class, 'index']) ->name('attack-tests.index');
+    Route::get('attack-tests/{id}',    [AttackTestController::class, 'show'])  ->name('attack-tests.show');
+    Route::post('attack-tests',        [AttackTestController::class, 'store']) ->name('attack-tests.store');
 });
