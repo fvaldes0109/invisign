@@ -3,7 +3,7 @@ resolver 127.0.0.11 valid=30s;
 # React SPA
 server {
     listen 80;
-    server_name app.invisign.com;
+    server_name invisign.com;
 
     location / {
         set $upstream http://frontend:80;
