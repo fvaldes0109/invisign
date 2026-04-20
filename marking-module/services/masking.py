@@ -18,6 +18,7 @@ instead of a Python-level loop.
 """
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from functools import lru_cache
 from typing import Tuple
 
@@ -159,6 +160,100 @@ def mask_image(image: np.ndarray, watermark: np.ndarray) -> np.ndarray:
 # Extraction
 # ---------------------------------------------------------------------------
 
+def _extract_once(
+    masked_image: np.ndarray,
+    original_image: np.ndarray,
+    Uw: np.ndarray,
+    Vtw: np.ndarray,
+    num_sv: int,
+    m: float,
+) -> np.ndarray:
+    """Single-orientation extraction. Assumes the marked image is already
+    in the same geometric frame as the original."""
+    n = blocks.BLOCK_SIZE
+
+    # Crop both images to the largest common block-aligned region so
+    # extraction still works if dimensions differ by a few pixels.
+    h = min(masked_image.shape[0], original_image.shape[0])
+    w = min(masked_image.shape[1], original_image.shape[1])
+    h_crop = (h // n) * n
+    w_crop = (w // n) * n
+
+    if h_crop == 0 or w_crop == 0:
+        raise ValueError(
+            f"images are too small to share any full {n}\u00d7{n} block region"
+        )
+
+    masked_c = masked_image[:h_crop, :w_crop]
+    original_c = original_image[:h_crop, :w_crop]
+
+    H = _hadamard_matrix(n)
+
+    masked_stack = blocks.deconstruct(masked_c).astype(np.float64)
+    orig_stack = blocks.deconstruct(original_c).astype(np.float64)
+    num_blocks = masked_stack.shape[0]
+
+    Bm = _batched_hadamard(masked_stack, H, n)
+    Bo = _batched_hadamard(orig_stack, H, n)
+
+    Sm = np.linalg.svd(Bm, compute_uv=False)       # (B, C, k)
+    So = np.linalg.svd(Bo, compute_uv=False)
+
+    b_idx = np.arange(1, num_blocks + 1, dtype=np.float64)
+    factors = (ALPHA * b_idx / m)
+
+    diff_largest = Sm[..., 0] - So[..., 0]         # (B, C)
+    samples = diff_largest / factors[:, None]
+
+    channels = samples.shape[1]
+    w_index_per_block = np.arange(num_blocks) % num_sv
+    w_index_per_sample = np.repeat(w_index_per_block, channels)
+    samples_flat = samples.reshape(-1)
+
+    S_final = np.zeros(num_sv, dtype=np.float64)
+    for i in range(num_sv):
+        bucket = samples_flat[w_index_per_sample == i]
+        if bucket.size:
+            S_final[i] = np.median(bucket)
+
+    np.clip(S_final, 0.0, None, out=S_final)
+
+    W_rec = (Uw * S_final) @ Vtw
+    W_rec = cv2.normalize(W_rec, None, 0, 255, cv2.NORM_MINMAX)
+    return W_rec.astype(np.uint8)
+
+
+def _ncc(a: np.ndarray, b: np.ndarray) -> float:
+    """Normalized cross-correlation in [-1, 1]; higher = closer match."""
+    x = a.astype(np.float64).ravel()
+    y = b.astype(np.float64).ravel()
+    if x.size != y.size:
+        return float("-inf")
+    x = x - x.mean()
+    y = y - y.mean()
+    denom = float(np.sqrt((x * x).sum() * (y * y).sum()))
+    if denom == 0.0:
+        return float("-inf")
+    return float((x * y).sum() / denom)
+
+
+def _dihedral_variants(img: np.ndarray):
+    """Yield the 8 rotation/mirror variants (dihedral group of the square).
+
+    Rotations and mirrors are lossless pixel permutations, so applying the
+    inverse of any such attack recovers the exact engraved image.
+    """
+    yield np.ascontiguousarray(img)
+    yield np.ascontiguousarray(np.rot90(img, 1))
+    yield np.ascontiguousarray(np.rot90(img, 2))
+    yield np.ascontiguousarray(np.rot90(img, 3))
+    flipped = np.fliplr(img)
+    yield np.ascontiguousarray(flipped)
+    yield np.ascontiguousarray(np.rot90(flipped, 1))
+    yield np.ascontiguousarray(np.rot90(flipped, 2))
+    yield np.ascontiguousarray(np.rot90(flipped, 3))
+
+
 def extract_mask(
     masked_image: np.ndarray,
     original_image: np.ndarray,
@@ -171,77 +266,49 @@ def extract_mask(
     The two images do not need pixel-exact matching dimensions — both are
     cropped to the largest common block-aligned region before comparison.
 
+    Robust to rotations and mirroring: the algorithm tries every element of
+    the dihedral group applied to the marked image and returns the candidate
+    whose reconstructed watermark best matches the reference (via NCC). For
+    a non-attacked image the identity variant wins naturally.
+
     Returns a grayscale uint8 image the same size as the watermark.
     """
     _validate_image(masked_image, "marked image")
     _validate_image(original_image, "original image")
-
-    n = blocks.BLOCK_SIZE
-
-    # Crop both images to the largest common block-aligned region so
-    # extraction works even when dimensions differ by a few pixels.
-    h = min(masked_image.shape[0], original_image.shape[0])
-    w = min(masked_image.shape[1], original_image.shape[1])
-    h_crop = (h // n) * n
-    w_crop = (w // n) * n
-
-    if h_crop == 0 or w_crop == 0:
-        raise ValueError(
-            f"images are too small to share any full {n}\u00d7{n} block region"
-        )
-
-    masked_image = masked_image[:h_crop, :w_crop]
-    original_image = original_image[:h_crop, :w_crop]
 
     Uw, Sw, Vtw = _watermark_svd(original_watermark, full=True)
     num_sv = Sw.size
     if num_sv == 0:
         raise ValueError("watermark has no singular values (empty array)")
 
-    gray_shape = _to_gray(original_watermark).shape
-    m = float(min(gray_shape))
+    ref_gray = _to_gray(original_watermark)
+    m = float(min(ref_gray.shape))
 
-    H = _hadamard_matrix(n)
+    def _run(variant: np.ndarray):
+        # NumPy SVD / matmul release the GIL, so threads give real parallelism.
+        try:
+            candidate = _extract_once(variant, original_image, Uw, Vtw, num_sv, m)
+        except ValueError as e:
+            return None, float("-inf"), e
+        return candidate, _ncc(candidate, ref_gray), None
 
-    masked_stack = blocks.deconstruct(masked_image).astype(np.float64)
-    orig_stack = blocks.deconstruct(original_image).astype(np.float64)
-    num_blocks = masked_stack.shape[0]
+    variants = list(_dihedral_variants(masked_image))
+    with ThreadPoolExecutor(max_workers=len(variants)) as pool:
+        results = list(pool.map(_run, variants))
 
-    # Batched forward Hadamard for both images.
-    Bm = _batched_hadamard(masked_stack, H, n)
-    Bo = _batched_hadamard(orig_stack, H, n)
+    best_extract: np.ndarray | None = None
+    best_score = float("-inf")
+    last_error: ValueError | None = None
 
-    # Only the first (largest) singular value carries the watermark term,
-    # so we skip ``compute_uv=True`` and keep memory/time down.
-    Sm = np.linalg.svd(Bm, compute_uv=False)       # (B, C, k)
-    So = np.linalg.svd(Bo, compute_uv=False)
+    for candidate, score, error in results:
+        if error is not None:
+            last_error = error
+            continue
+        if score > best_score:
+            best_score = score
+            best_extract = candidate
 
-    b_idx = np.arange(1, num_blocks + 1, dtype=np.float64)
-    factors = (ALPHA * b_idx / m)                  # (B,)
+    if best_extract is None:
+        raise last_error or ValueError("extraction failed: no valid candidate produced")
 
-    # Recover σ_W samples per (block, channel) from the largest SV diff.
-    diff_largest = Sm[..., 0] - So[..., 0]         # (B, C)
-    samples = diff_largest / factors[:, None]      # (B, C)
-
-    # Aggregate by watermark SV index. All three colour channels for the
-    # same block contribute to the same ``w_idx`` bucket.
-    channels = samples.shape[1]
-    w_index_per_block = np.arange(num_blocks) % num_sv
-    w_index_per_sample = np.repeat(w_index_per_block, channels)
-    samples_flat = samples.reshape(-1)
-
-    # Robust median aggregation survives heavy-tailed noise from attacks
-    # better than a plain arithmetic mean.
-    S_final = np.zeros(num_sv, dtype=np.float64)
-    for i in range(num_sv):
-        bucket = samples_flat[w_index_per_sample == i]
-        if bucket.size:
-            S_final[i] = np.median(bucket)
-
-    # Singular values are non-negative by definition; clip sign noise.
-    np.clip(S_final, 0.0, None, out=S_final)
-
-    # W = U · diag(S) · V^T, done cheaply with broadcasting.
-    W_rec = (Uw * S_final) @ Vtw
-    W_rec = cv2.normalize(W_rec, None, 0, 255, cv2.NORM_MINMAX)
-    return W_rec.astype(np.uint8)
+    return best_extract
