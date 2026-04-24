@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
+import heroImg from '../assets/hero.png';
+import usecasePhotoImg from '../assets/usecase-photo.png';
+import usecaseVideoImg from '../assets/usecase-video.png';
 
 const colors = {
     bg: '#07090F',
@@ -856,7 +859,7 @@ export function MainPage() {
                         <div style={styles.heroImageWrap}>
                             <div style={styles.heroImagePlaceholder}>
                                 <div style={styles.watermarkGrid} />
-                                <span style={styles.heroImageIcon}>🖼️</span>
+                                <img src={heroImg} alt="Watermarked sample" style={{ width: '100%', height: '100%', objectFit: 'cover', position: 'relative', zIndex: 1 }} />
                                 <div style={styles.watermarkBadge}>✓ Watermarked</div>
                             </div>
                         </div>
@@ -967,7 +970,9 @@ export function MainPage() {
                             opacity: useCasesInView ? undefined : 0,
                             animation: useCasesInView ? 'slideInLeft 0.65s ease both' : undefined,
                         }}>
-                            <div style={styles.useCaseVisual('#1a1f45', '#0d1235')}>🖼️</div>
+                            <div style={{ ...styles.useCaseVisual('#1a1f45', '#0d1235'), padding: 0 }}>
+                            <img src={usecasePhotoImg} alt="Photography use case" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
                             <div style={styles.useCaseBody}>
                                 <div style={styles.useCaseTitle}>Photography & Stock Images</div>
                                 <div style={styles.useCaseDesc}>
@@ -989,7 +994,9 @@ export function MainPage() {
                             opacity: useCasesInView ? undefined : 0,
                             animation: useCasesInView ? 'slideInRight 0.65s 0.1s ease both' : undefined,
                         }}>
-                            <div style={styles.useCaseVisual('#041520', '#091a28')}>🎬</div>
+                            <div style={{ ...styles.useCaseVisual('#041520', '#091a28'), padding: 0 }}>
+                            <img src={usecaseVideoImg} alt="Film & streaming use case" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
                             <div style={styles.useCaseBody}>
                                 <div style={styles.useCaseTitle}>Film, TV & Streaming</div>
                                 <div style={styles.useCaseDesc}>
