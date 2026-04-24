@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 
 const colors = {
     bg: '#07090F',
@@ -372,7 +373,7 @@ const styles = {
         border: `1px solid ${colors.border}`,
         borderRadius: 16,
         padding: '2rem',
-        transition: 'border-color 0.3s',
+        transition: 'border-color 0.25s, transform 0.25s, box-shadow 0.25s',
     },
     featureIcon: (color: string): React.CSSProperties => ({
         width: 48,
@@ -525,6 +526,7 @@ const styles = {
         borderRadius: 12,
         background: colors.surface,
         border: `1px solid ${colors.border}`,
+        transition: 'border-color 0.2s, transform 0.2s',
     }),
     attackIcon: (pass: boolean): React.CSSProperties => ({
         width: 28,
@@ -719,9 +721,66 @@ const steps = [
     },
 ];
 
+function useInView(threshold = 0.1) {
+    const ref = useRef<HTMLDivElement>(null);
+    const [inView, setInView] = useState(false);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(
+            ([e]) => { if (e.isIntersecting) { setInView(true); obs.disconnect(); } },
+            { threshold }
+        );
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, [threshold]);
+    return { ref, inView };
+}
+
 export function MainPage() {
+    const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
+    const [hoveredAttack, setHoveredAttack] = useState<number | null>(null);
+
+    const { ref: featuresRef, inView: featuresInView } = useInView();
+    const { ref: stepsRef, inView: stepsInView } = useInView();
+    const { ref: useCasesRef, inView: useCasesInView } = useInView();
+    const { ref: attacksRef, inView: attacksInView } = useInView();
+    const { ref: resistTextRef, inView: resistTextInView } = useInView();
+    const { ref: ctaRef, inView: ctaInView } = useInView();
+
     return (
         <div style={styles.page}>
+            <style>{`
+                @keyframes fadeInUp {
+                    from { opacity: 0; transform: translateY(24px); }
+                    to   { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
+                }
+                @keyframes float {
+                    0%, 100% { transform: translateY(0px); }
+                    50%       { transform: translateY(-12px); }
+                }
+                @keyframes pulseDot {
+                    0%, 100% { transform: scale(1);    opacity: 1; }
+                    50%       { transform: scale(0.75); opacity: 0.45; }
+                }
+                @keyframes progressGrow {
+                    from { width: 0%; }
+                    to   { width: 96%; }
+                }
+                @keyframes slideInLeft {
+                    from { opacity: 0; transform: translateX(-36px); }
+                    to   { opacity: 1; transform: translateX(0); }
+                }
+                @keyframes slideInRight {
+                    from { opacity: 0; transform: translateX(36px); }
+                    to   { opacity: 1; transform: translateX(0); }
+                }
+            `}</style>
+
             {/* ── Navbar ── */}
             <nav style={styles.nav}>
                 <Link to="/" style={styles.navLogo}>
@@ -743,30 +802,30 @@ export function MainPage() {
 
             {/* ── Hero ── */}
             <div style={styles.hero}>
-                {/* Left copy */}
+                {/* Left copy — staggered fade-in */}
                 <div>
-                    <div style={styles.heroBadge}>
-                        <span style={styles.heroDot} />
+                    <div style={{ ...styles.heroBadge, animation: 'fadeInUp 0.6s ease both' }}>
+                        <span style={{ ...styles.heroDot, animation: 'pulseDot 2s ease-in-out infinite' }} />
                         Invisible · Robust · Traceable
                     </div>
 
-                    <h1 style={styles.heroTitle}>
+                    <h1 style={{ ...styles.heroTitle, animation: 'fadeInUp 0.7s 0.1s ease both' }}>
                         Protect your visuals with{' '}
                         <span style={styles.heroTitleGrad}>invisible watermarks</span>
                     </h1>
 
-                    <p style={styles.heroSub}>
+                    <p style={{ ...styles.heroSub, animation: 'fadeInUp 0.7s 0.2s ease both' }}>
                         Embed imperceptible copyright marks into images and video. Your content
                         looks untouched, but the mark persists through compression, cropping,
                         and edits — giving you proof of ownership wherever it ends up.
                     </p>
 
-                    <div style={styles.heroActions}>
+                    <div style={{ ...styles.heroActions, animation: 'fadeInUp 0.7s 0.32s ease both' }}>
                         <Link to="/register" style={styles.btnHeroPrimary}>Start for free</Link>
                         <a href="#how-it-works" style={styles.btnHeroSecondary}>See how it works →</a>
                     </div>
 
-                    <div style={styles.heroStats}>
+                    <div style={{ ...styles.heroStats, animation: 'fadeInUp 0.7s 0.45s ease both' }}>
                         <div style={styles.heroStat}>
                             <span style={styles.heroStatValue}>99.8%</span>
                             <span style={styles.heroStatLabel}>Extraction accuracy</span>
@@ -782,9 +841,9 @@ export function MainPage() {
                     </div>
                 </div>
 
-                {/* Right visual — fake app card */}
-                <div style={styles.heroVisual}>
-                    <div style={styles.heroCard}>
+                {/* Right visual — floating card */}
+                <div style={{ ...styles.heroVisual, animation: 'fadeInUp 0.8s 0.25s ease both' }}>
+                    <div style={{ ...styles.heroCard, animation: 'float 5s ease-in-out infinite' }}>
                         {/* Fake window bar */}
                         <div style={styles.heroCardBar}>
                             <div style={styles.heroCardDot('#FF5F57')} />
@@ -818,7 +877,10 @@ export function MainPage() {
                                     <span style={styles.heroCardVal(colors.accent)}>96 / 100</span>
                                 </div>
                                 <div style={styles.progressBar}>
-                                    <div style={styles.progressFill(96, `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`)} />
+                                    <div style={{
+                                        ...styles.progressFill(96, `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`),
+                                        animation: 'progressGrow 1.4s 0.9s ease both',
+                                    }} />
                                 </div>
                             </div>
                         </div>
@@ -836,9 +898,21 @@ export function MainPage() {
                         the tools to embed, manage, and verify ownership at any scale.
                     </p>
 
-                    <div style={styles.featureGrid}>
-                        {features.map((f) => (
-                            <div key={f.title} style={styles.featureCard}>
+                    <div ref={featuresRef} style={styles.featureGrid}>
+                        {features.map((f, i) => (
+                            <div
+                                key={f.title}
+                                style={{
+                                    ...styles.featureCard,
+                                    transform: hoveredFeature === i ? 'translateY(-6px)' : 'translateY(0)',
+                                    borderColor: hoveredFeature === i ? `${f.color}55` : colors.border,
+                                    boxShadow: hoveredFeature === i ? `0 16px 40px rgba(0,0,0,0.35)` : undefined,
+                                    opacity: featuresInView ? undefined : 0,
+                                    animation: featuresInView ? `fadeInUp 0.55s ${i * 0.08}s ease both` : undefined,
+                                }}
+                                onMouseEnter={() => setHoveredFeature(i)}
+                                onMouseLeave={() => setHoveredFeature(null)}
+                            >
                                 <div style={styles.featureIcon(f.color)}>{f.icon}</div>
                                 <div style={styles.featureTitle}>{f.title}</div>
                                 <div style={styles.featureDesc}>{f.desc}</div>
@@ -858,9 +932,16 @@ export function MainPage() {
                         no technical expertise required.
                     </p>
 
-                    <div style={styles.stepsGrid}>
+                    <div ref={stepsRef} style={styles.stepsGrid}>
                         {steps.map((s, i) => (
-                            <div key={s.title} style={styles.stepCard}>
+                            <div
+                                key={s.title}
+                                style={{
+                                    ...styles.stepCard,
+                                    opacity: stepsInView ? undefined : 0,
+                                    animation: stepsInView ? `fadeInUp 0.55s ${i * 0.1}s ease both` : undefined,
+                                }}
+                            >
                                 <div style={styles.stepNum}>{i + 1}</div>
                                 <div style={styles.stepTitle}>{s.title}</div>
                                 <div style={styles.stepDesc}>{s.desc}</div>
@@ -880,8 +961,12 @@ export function MainPage() {
                         watermarking adapts to every format and workflow.
                     </p>
 
-                    <div style={styles.useCaseGrid}>
-                        <div style={styles.useCaseCard(colors.primary)}>
+                    <div ref={useCasesRef} style={styles.useCaseGrid}>
+                        <div style={{
+                            ...styles.useCaseCard(colors.primary),
+                            opacity: useCasesInView ? undefined : 0,
+                            animation: useCasesInView ? 'slideInLeft 0.65s ease both' : undefined,
+                        }}>
                             <div style={styles.useCaseVisual('#1a1f45', '#0d1235')}>🖼️</div>
                             <div style={styles.useCaseBody}>
                                 <div style={styles.useCaseTitle}>Photography & Stock Images</div>
@@ -899,7 +984,11 @@ export function MainPage() {
                             </div>
                         </div>
 
-                        <div style={styles.useCaseCard(colors.accent)}>
+                        <div style={{
+                            ...styles.useCaseCard(colors.accent),
+                            opacity: useCasesInView ? undefined : 0,
+                            animation: useCasesInView ? 'slideInRight 0.65s 0.1s ease both' : undefined,
+                        }}>
                             <div style={styles.useCaseVisual('#041520', '#091a28')}>🎬</div>
                             <div style={styles.useCaseBody}>
                                 <div style={styles.useCaseTitle}>Film, TV & Streaming</div>
@@ -928,9 +1017,22 @@ export function MainPage() {
 
                     <div style={styles.resistGrid}>
                         {/* Attack list */}
-                        <div style={styles.attackList}>
-                            {attacks.map(a => (
-                                <div key={a.label} style={styles.attackItem(a.pass)}>
+                        <div ref={attacksRef} style={styles.attackList}>
+                            {attacks.map((a, i) => (
+                                <div
+                                    key={a.label}
+                                    style={{
+                                        ...styles.attackItem(a.pass),
+                                        transform: hoveredAttack === i ? 'translateX(4px)' : 'translateX(0)',
+                                        borderColor: hoveredAttack === i
+                                            ? (a.pass ? `rgba(16,185,129,0.4)` : `rgba(239,68,68,0.4)`)
+                                            : colors.border,
+                                        opacity: attacksInView ? undefined : 0,
+                                        animation: attacksInView ? `slideInLeft 0.5s ${i * 0.07}s ease both` : undefined,
+                                    }}
+                                    onMouseEnter={() => setHoveredAttack(i)}
+                                    onMouseLeave={() => setHoveredAttack(null)}
+                                >
                                     <div style={styles.attackIcon(a.pass)}>
                                         {a.pass ? '✓' : '✗'}
                                     </div>
@@ -943,43 +1045,39 @@ export function MainPage() {
                         </div>
 
                         {/* Explanatory text */}
-                        <div style={styles.resistText}>
-                            <div style={styles.resistTextItem}>
-                                <div style={styles.resistTextIcon}>🧮</div>
-                                <div>
-                                    <div style={styles.resistTextTitle}>Frequency-domain encoding</div>
-                                    <div style={styles.resistTextDesc}>
-                                        Payloads are embedded in the mid-frequency DCT coefficients of
-                                        the image, the same domain JPEG uses to store most visual
-                                        information. This makes the mark inherently tolerant of compression.
+                        <div ref={resistTextRef} style={styles.resistText}>
+                            {[
+                                {
+                                    icon: '🧮',
+                                    title: 'Frequency-domain encoding',
+                                    desc: 'Payloads are embedded in the mid-frequency DCT coefficients of the image, the same domain JPEG uses to store most visual information. This makes the mark inherently tolerant of compression.',
+                                },
+                                {
+                                    icon: '🔁',
+                                    title: 'Redundant distribution',
+                                    desc: 'Each bit of the payload is distributed redundantly across thousands of coefficients. Even if large portions of the image are cropped away, the remaining coefficients can reconstruct the full payload.',
+                                },
+                                {
+                                    icon: '📊',
+                                    title: 'Error-correcting codes',
+                                    desc: 'Reed-Solomon error correction is applied before embedding. The decoder can recover the payload accurately even when a significant percentage of coefficients are corrupted by attacks.',
+                                },
+                            ].map((item, i) => (
+                                <div
+                                    key={item.title}
+                                    style={{
+                                        ...styles.resistTextItem,
+                                        opacity: resistTextInView ? undefined : 0,
+                                        animation: resistTextInView ? `slideInRight 0.55s ${i * 0.12}s ease both` : undefined,
+                                    }}
+                                >
+                                    <div style={styles.resistTextIcon}>{item.icon}</div>
+                                    <div>
+                                        <div style={styles.resistTextTitle}>{item.title}</div>
+                                        <div style={styles.resistTextDesc}>{item.desc}</div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div style={styles.resistTextItem}>
-                                <div style={styles.resistTextIcon}>🔁</div>
-                                <div>
-                                    <div style={styles.resistTextTitle}>Redundant distribution</div>
-                                    <div style={styles.resistTextDesc}>
-                                        Each bit of the payload is distributed redundantly across
-                                        thousands of coefficients. Even if large portions of the image
-                                        are cropped away, the remaining coefficients can reconstruct
-                                        the full payload.
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={styles.resistTextItem}>
-                                <div style={styles.resistTextIcon}>📊</div>
-                                <div>
-                                    <div style={styles.resistTextTitle}>Error-correcting codes</div>
-                                    <div style={styles.resistTextDesc}>
-                                        Reed-Solomon error correction is applied before embedding.
-                                        The decoder can recover the payload accurately even when a
-                                        significant percentage of coefficients are corrupted by attacks.
-                                    </div>
-                                </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
@@ -987,7 +1085,14 @@ export function MainPage() {
 
             {/* ── CTA Banner ── */}
             <div style={styles.ctaSection}>
-                <div style={styles.ctaInner}>
+                <div
+                    ref={ctaRef}
+                    style={{
+                        ...styles.ctaInner,
+                        opacity: ctaInView ? undefined : 0,
+                        animation: ctaInView ? 'fadeInUp 0.65s ease both' : undefined,
+                    }}
+                >
                     <h2 style={styles.ctaTitle}>
                         Ready to protect your{' '}
                         <span style={styles.heroTitleGrad}>creative work?</span>
