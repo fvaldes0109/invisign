@@ -85,7 +85,7 @@ async def extract_images(
     watermark_bytes = await watermark.read()
 
     try:
-        result_image = extract_mask_controller.process(
+        result_image, similarity = extract_mask_controller.process(
             marked_image_bytes, original_image_bytes, watermark_bytes
         )
     except ValueError as e:
@@ -94,7 +94,9 @@ async def extract_images(
         logger.exception("/extract failed")
         raise HTTPException(status_code=500, detail="internal error")
 
-    return Response(content=_encode_jpeg(result_image), media_type="image/jpeg")
+    response = Response(content=_encode_jpeg(result_image), media_type="image/jpeg")
+    response.headers["X-Similarity-Score"] = f"{similarity:.6f}"
+    return response
 
 
 @app.post("/apply-attack")

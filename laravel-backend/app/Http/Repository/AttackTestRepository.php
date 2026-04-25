@@ -18,6 +18,7 @@ class AttackTestRepository
             'attack_type'         => $attackTest->getAttackType(),
             'attacked_image_path' => $attackTest->getAttackedImagePath(),
             'result_path'         => $attackTest->getResultPath(),
+            'similarity_score'    => $attackTest->getSimilarityScore(),
         ]);
     }
 

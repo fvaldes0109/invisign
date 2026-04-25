@@ -73,12 +73,14 @@ class ExtractionTest extends TestCase
             ]);
 
         $response->assertOk()
-            ->assertJsonStructure(['data' => ['id', 'engraving_id', 'suspect_url', 'result_url']])
-            ->assertJsonPath('data.engraving_id', $engravingId);
+            ->assertJsonStructure(['data' => ['id', 'engraving_id', 'suspect_url', 'result_url', 'similarity_score']])
+            ->assertJsonPath('data.engraving_id', $engravingId)
+            ->assertJsonPath('data.similarity_score', 1);
 
         $this->assertDatabaseHas('extractions', [
-            'user_id'      => $user->id,
-            'engraving_id' => $engravingId,
+            'user_id'          => $user->id,
+            'engraving_id'     => $engravingId,
+            'similarity_score' => 1.0,
         ]);
 
         $extractionId = $response->json('data.id');
@@ -184,7 +186,7 @@ class ExtractionTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [[
-                    'id', 'engraving_id', 'suspect_url', 'result_url',
+                    'id', 'engraving_id', 'suspect_url', 'result_url', 'similarity_score',
                     'engraving' => ['id', 'engraved_url', 'image', 'watermark'],
                 ]],
             ]);
@@ -281,7 +283,7 @@ class ExtractionTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure([
                 'data' => [
-                    'id', 'engraving_id', 'suspect_url', 'result_url',
+                    'id', 'engraving_id', 'suspect_url', 'result_url', 'similarity_score',
                     'engraving' => ['id', 'engraved_url', 'image', 'watermark'],
                 ],
             ])

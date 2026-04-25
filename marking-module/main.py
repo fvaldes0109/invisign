@@ -32,7 +32,8 @@ def main():
 
     # Extract Watermark
     print("Extracting watermark...")
-    extracted_watermark = masking.extract_mask(final_image, image, mark)
+    extracted_watermark, similarity = masking.extract_mask(final_image, image, mark)
+    print(f"Similarity (NCC): {similarity:.4f}")
 
     cv2.imshow("Extracted Watermark", extracted_watermark)
 

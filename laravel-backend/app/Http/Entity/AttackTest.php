@@ -13,6 +13,7 @@ class AttackTest
         private readonly string   $attackType,
         private readonly string   $attackedImagePath,
         private readonly string   $resultPath,
+        private readonly ?float   $similarityScore = null,
         private readonly ?Engraving $engraving = null,
     ) {
     }
@@ -24,6 +25,7 @@ class AttackTest
         string $attackType,
         string $attackedImagePath,
         string $resultPath,
+        ?float $similarityScore = null,
     ): self {
         return new self(
             id:                $id,
@@ -32,6 +34,7 @@ class AttackTest
             attackType:        $attackType,
             attackedImagePath: $attackedImagePath,
             resultPath:        $resultPath,
+            similarityScore:   $similarityScore,
         );
     }
 
@@ -44,17 +47,19 @@ class AttackTest
             attackType:        $e->attack_type,
             attackedImagePath: $e->attacked_image_path,
             resultPath:        $e->result_path,
+            similarityScore:   isset($e->similarity_score) ? (float) $e->similarity_score : null,
             engraving:         $e->relationLoaded('engraving') && $e->engraving
                                     ? Engraving::fromEloquent($e->engraving)
                                     : null,
         );
     }
 
-    public function getId(): string            { return $this->id; }
-    public function getUserId(): int           { return $this->userId; }
-    public function getEngravingId(): string   { return $this->engravingId; }
-    public function getAttackType(): string    { return $this->attackType; }
+    public function getId(): string               { return $this->id; }
+    public function getUserId(): int              { return $this->userId; }
+    public function getEngravingId(): string      { return $this->engravingId; }
+    public function getAttackType(): string       { return $this->attackType; }
     public function getAttackedImagePath(): string { return $this->attackedImagePath; }
-    public function getResultPath(): string    { return $this->resultPath; }
-    public function getEngraving(): ?Engraving { return $this->engraving; }
+    public function getResultPath(): string       { return $this->resultPath; }
+    public function getSimilarityScore(): ?float  { return $this->similarityScore; }
+    public function getEngraving(): ?Engraving    { return $this->engraving; }
 }

@@ -71,6 +71,7 @@ const c = {
     errorBg: 'rgba(248,113,113,0.08)',
     errorBorder: 'rgba(248,113,113,0.25)',
     warning: '#FBBF24',
+    success: '#10B981',
 };
 
 const s: Record<string, React.CSSProperties> = {
@@ -232,6 +233,31 @@ const s: Record<string, React.CSSProperties> = {
         textDecoration: 'none',
     },
 
+    scoreRow: {
+        padding: '0.6rem 1rem',
+        borderTop: `1px solid ${c.border}`,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '0.4rem',
+    },
+    scoreLabelRow: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    scoreLabel: {
+        fontSize: '0.7rem',
+        color: c.textMuted,
+        fontWeight: 500,
+        letterSpacing: '0.03em',
+    },
+    progressBar: {
+        height: 4,
+        borderRadius: 2,
+        background: c.border,
+        overflow: 'hidden',
+    },
+
     backBtn: {
         display: 'inline-flex',
         alignItems: 'center',
@@ -263,6 +289,10 @@ const s: Record<string, React.CSSProperties> = {
     previewName: { fontSize: '0.95rem', fontWeight: 700, color: c.text },
     previewSub: { fontSize: '0.8rem', color: c.textMuted },
 };
+
+function scoreColor(pct: number) {
+    return pct >= 85 ? c.success : pct >= 60 ? c.warning : c.error;
+}
 
 export function AttackTestPage() {
     const location = useLocation();
@@ -409,6 +439,20 @@ export function AttackTestPage() {
                                         ↓ Download
                                     </a>
                                 </div>
+                                {result.similarity_score != null && (() => {
+                                    const pct = Math.round(result.similarity_score! * 100);
+                                    return (
+                                        <div style={s.scoreRow}>
+                                            <div style={s.scoreLabelRow}>
+                                                <span style={s.scoreLabel}>Similarity (NCC)</span>
+                                                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: scoreColor(pct) }}>{pct}%</span>
+                                            </div>
+                                            <div style={s.progressBar}>
+                                                <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: scoreColor(pct) }} />
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </div>
                     </div>

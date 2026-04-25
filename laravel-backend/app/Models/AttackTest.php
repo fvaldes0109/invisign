@@ -12,6 +12,10 @@ class AttackTest extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'similarity_score' => 'float',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

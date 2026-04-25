@@ -36,7 +36,7 @@ class TestAttackOnEngraving
 
         $attackedBytes = $this->watermarkingService->applyAttack($engravingBytes, $attackType, $params);
 
-        $resultBytes = $this->watermarkingService->extract(
+        $extractionResult = $this->watermarkingService->extract(
             $attackedBytes,
             $originalImageContents,
             $watermarkContents,
@@ -47,7 +47,7 @@ class TestAttackOnEngraving
         $resultPath       = "attack-tests/{$userId}/{$id}.jpg";
 
         Storage::disk('public')->put($attackedPath, $attackedBytes);
-        Storage::disk('public')->put($resultPath, $resultBytes);
+        Storage::disk('public')->put($resultPath, $extractionResult->bytes);
 
         $attackTest = AttackTest::create(
             id:                $id,
@@ -56,6 +56,7 @@ class TestAttackOnEngraving
             attackType:        $attackType,
             attackedImagePath: $attackedPath,
             resultPath:        $resultPath,
+            similarityScore:   $extractionResult->similarity,
         );
 
         $this->attackTestRepository->save($attackTest);

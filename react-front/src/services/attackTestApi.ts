@@ -15,6 +15,7 @@ export interface AttackTestResult {
     attack_type: AttackType;
     attacked_image_url: string;
     result_url: string;
+    similarity_score?: number | null;
     engraving?: {
         id: string;
         engraved_url: string;

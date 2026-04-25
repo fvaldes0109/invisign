@@ -258,7 +258,7 @@ def extract_mask(
     masked_image: np.ndarray,
     original_image: np.ndarray,
     original_watermark: np.ndarray,
-) -> np.ndarray:
+) -> Tuple[np.ndarray, float]:
     """
     Recover the watermark from ``masked_image`` using the un-marked
     ``original_image`` and the original watermark (needed for U, V^T).
@@ -271,7 +271,9 @@ def extract_mask(
     whose reconstructed watermark best matches the reference (via NCC). For
     a non-attacked image the identity variant wins naturally.
 
-    Returns a grayscale uint8 image the same size as the watermark.
+    Returns a tuple of:
+      - grayscale uint8 image the same size as the watermark
+      - NCC similarity score in [0, 1] (higher = better recovery)
     """
     _validate_image(masked_image, "marked image")
     _validate_image(original_image, "original image")
@@ -311,4 +313,7 @@ def extract_mask(
     if best_extract is None:
         raise last_error or ValueError("extraction failed: no valid candidate produced")
 
-    return best_extract
+    # Clamp NCC to [0, 1]: values below 0 indicate anti-correlation (noise),
+    # and non-finite values arise from degenerate size-mismatch edge cases.
+    similarity = float(np.clip(best_score, 0.0, 1.0)) if np.isfinite(best_score) else 0.0
+    return best_extract, similarity

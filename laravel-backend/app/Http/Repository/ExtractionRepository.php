@@ -13,11 +13,12 @@ class ExtractionRepository
     public function save(Extraction $extraction): void
     {
         EloquentExtraction::create([
-            'id'           => $extraction->getId(),
-            'user_id'      => $extraction->getUserId(),
-            'engraving_id' => $extraction->getEngravingId(),
-            'suspect_path' => $extraction->getSuspectPath(),
-            'result_path'  => $extraction->getResultPath(),
+            'id'               => $extraction->getId(),
+            'user_id'          => $extraction->getUserId(),
+            'engraving_id'     => $extraction->getEngravingId(),
+            'suspect_path'     => $extraction->getSuspectPath(),
+            'result_path'      => $extraction->getResultPath(),
+            'similarity_score' => $extraction->getSimilarityScore(),
         ]);
     }
 

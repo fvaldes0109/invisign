@@ -9,6 +9,8 @@ const c = {
     border: '#1E2A45',
     accent: '#06B6D4',
     success: '#10B981',
+    warning: '#F59E0B',
+    error: '#F87171',
     text: '#F1F5F9',
     textMuted: '#94A3B8',
     textDim: '#64748B',
@@ -151,6 +153,31 @@ const s: Record<string, React.CSSProperties> = {
         textTransform: 'uppercase' as const,
         color: c.textDim,
     },
+    scoreRow: {
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '0.3rem',
+        paddingTop: '0.4rem',
+        borderTop: `1px solid rgba(255,255,255,0.05)`,
+    },
+    scoreLabelRow: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    scoreLabel: {
+        fontSize: '0.7rem',
+        color: c.textDim,
+        fontWeight: 500,
+        letterSpacing: '0.03em',
+    },
+    progressBar: {
+        height: 3,
+        borderRadius: 2,
+        background: c.border,
+        overflow: 'hidden',
+    },
+
     emptyState: {
         display: 'flex',
         flexDirection: 'column' as const,
@@ -167,6 +194,10 @@ const s: Record<string, React.CSSProperties> = {
     emptyTitle: { fontSize: '1rem', fontWeight: 700 },
     emptyHint: { fontSize: '0.85rem', color: c.textMuted },
 };
+
+function scoreColor(pct: number) {
+    return pct >= 85 ? c.success : pct >= 60 ? c.warning : c.error;
+}
 
 export function ExtractionsPage() {
     const [extractions, setExtractions] = useState<ExtractionResult[]>([]);
@@ -241,6 +272,20 @@ export function ExtractionsPage() {
                                                     </div>
                                                 )}
                                             </div>
+                                            {ex.similarity_score != null && (() => {
+                                                const pct = Math.round(ex.similarity_score! * 100);
+                                                return (
+                                                    <div style={s.scoreRow}>
+                                                        <div style={s.scoreLabelRow}>
+                                                            <span style={s.scoreLabel}>Similarity</span>
+                                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: scoreColor(pct) }}>{pct}%</span>
+                                                        </div>
+                                                        <div style={s.progressBar}>
+                                                            <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: scoreColor(pct) }} />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     )}
                                 </div>

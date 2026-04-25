@@ -33,7 +33,7 @@ class ExtractWatermark
         $originalImageContents = Storage::disk('public')->get($image->getImagePath());
         $watermarkContents     = Storage::disk('public')->get($watermark->getImagePath());
 
-        $resultBytes = $this->watermarkingService->extract(
+        $result = $this->watermarkingService->extract(
             $suspectImageContents,
             $originalImageContents,
             $watermarkContents,
@@ -44,14 +44,15 @@ class ExtractWatermark
         $resultPath  = "extractions/{$userId}/{$id}.jpg";
 
         Storage::disk('public')->put($suspectPath, $suspectImageContents);
-        Storage::disk('public')->put($resultPath, $resultBytes);
+        Storage::disk('public')->put($resultPath, $result->bytes);
 
         $extraction = Extraction::create(
-            id:          $id,
-            userId:      $userId,
-            engravingId: $engravingId,
-            suspectPath: $suspectPath,
-            resultPath:  $resultPath,
+            id:              $id,
+            userId:          $userId,
+            engravingId:     $engravingId,
+            suspectPath:     $suspectPath,
+            resultPath:      $resultPath,
+            similarityScore: $result->similarity,
         );
 
         $this->extractionRepository->save($extraction);

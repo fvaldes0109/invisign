@@ -13,6 +13,7 @@ const c = {
     textMuted: '#94A3B8',
     textDim: '#64748B',
     success: '#10B981',
+    warning: '#F59E0B',
     error: '#F87171',
     errorBg: 'rgba(248,113,113,0.08)',
     errorBorder: 'rgba(248,113,113,0.25)',
@@ -230,6 +231,31 @@ const s: Record<string, React.CSSProperties> = {
         textDecoration: 'none',
     },
 
+    // Similarity score
+    scoreRow: {
+        padding: '1rem 1.5rem',
+        borderTop: `1px solid rgba(16,185,129,0.15)`,
+        display: 'flex',
+        flexDirection: 'column' as const,
+        gap: '0.5rem',
+    },
+    scoreLabelRow: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    scoreLabel: {
+        fontSize: '0.78rem',
+        color: c.textMuted,
+        fontWeight: 500,
+    },
+    progressBar: {
+        height: 5,
+        borderRadius: 3,
+        background: c.border,
+        overflow: 'hidden',
+    },
+
     emptyState: {
         textAlign: 'center' as const,
         padding: '2rem',
@@ -237,6 +263,18 @@ const s: Record<string, React.CSSProperties> = {
         fontSize: '0.875rem',
     },
 };
+
+function scoreColor(pct: number) {
+    return pct >= 85 ? c.success : pct >= 60 ? c.warning : c.error;
+}
+
+function scoreBarBg(pct: number) {
+    return pct >= 85
+        ? `linear-gradient(90deg, ${c.success}, #059669)`
+        : pct >= 60
+        ? `linear-gradient(90deg, ${c.warning}, #D97706)`
+        : `linear-gradient(90deg, ${c.error}, #EF4444)`;
+}
 
 export function ExtractPage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -375,6 +413,22 @@ export function ExtractPage() {
                             <span style={s.resultTitle}>Extracted watermark</span>
                         </div>
                         <img src={result.result_url} alt="Extracted watermark" style={s.resultImg} />
+                        {result.similarity_score != null && (() => {
+                            const pct = Math.round(result.similarity_score! * 100);
+                            return (
+                                <div style={s.scoreRow}>
+                                    <div style={s.scoreLabelRow}>
+                                        <span style={s.scoreLabel}>Similarity (NCC)</span>
+                                        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: scoreColor(pct) }}>
+                                            {pct}%
+                                        </span>
+                                    </div>
+                                    <div style={s.progressBar}>
+                                        <div style={{ height: '100%', width: `${pct}%`, borderRadius: 3, background: scoreBarBg(pct), transition: 'width 0.8s ease' }} />
+                                    </div>
+                                </div>
+                            );
+                        })()}
                         <div style={s.resultFooter}>
                             <a href={result.result_url} download style={s.downloadBtn}>
                                 ↓ Download

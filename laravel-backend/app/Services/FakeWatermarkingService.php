@@ -9,9 +9,9 @@ class FakeWatermarkingService implements WatermarkingServiceInterface
         return $this->makeJpeg();
     }
 
-    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): string
+    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): ExtractionResult
     {
-        return $this->makeJpeg();
+        return new ExtractionResult(bytes: $this->makeJpeg(), similarity: 1.0);
     }
 
     public function applyAttack(string $imageContents, string $attackType, array $params = []): string

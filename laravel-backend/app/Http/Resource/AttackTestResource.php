@@ -15,11 +15,12 @@ class AttackTestResource extends JsonResource
         $engraving  = $attackTest->getEngraving();
 
         return [
-            'id'                => $attackTest->getId(),
-            'engraving_id'      => $attackTest->getEngravingId(),
-            'attack_type'       => $attackTest->getAttackType(),
+            'id'                 => $attackTest->getId(),
+            'engraving_id'       => $attackTest->getEngravingId(),
+            'attack_type'        => $attackTest->getAttackType(),
             'attacked_image_url' => Storage::disk('public')->url($attackTest->getAttackedImagePath()),
-            'result_url'        => Storage::disk('public')->url($attackTest->getResultPath()),
+            'result_url'         => Storage::disk('public')->url($attackTest->getResultPath()),
+            'similarity_score'   => $attackTest->getSimilarityScore(),
             'engraving'         => $engraving ? [
                 'id'           => $engraving->getId(),
                 'engraved_url' => Storage::disk('public')->url($engraving->getEngravedPath()),

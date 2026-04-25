@@ -33,7 +33,7 @@ class MarkingModuleService implements WatermarkingServiceInterface
         return $response->getBody()->getContents();
     }
 
-    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): string
+    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): ExtractionResult
     {
         $response = $this->http->post("{$this->baseUrl}/extract", [
             'multipart' => [
@@ -55,7 +55,13 @@ class MarkingModuleService implements WatermarkingServiceInterface
             ],
         ]);
 
-        return $response->getBody()->getContents();
+        $similarity = (float) ($response->getHeaderLine('X-Similarity-Score') ?: '0');
+        $similarity = max(0.0, min(1.0, $similarity));
+
+        return new ExtractionResult(
+            bytes:      $response->getBody()->getContents(),
+            similarity: $similarity,
+        );
     }
 
     public function applyAttack(string $imageContents, string $attackType, array $params = []): string

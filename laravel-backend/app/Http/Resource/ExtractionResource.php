@@ -15,10 +15,11 @@ class ExtractionResource extends JsonResource
         $engraving  = $extraction->getEngraving();
 
         return [
-            'id'           => $extraction->getId(),
-            'engraving_id' => $extraction->getEngravingId(),
-            'suspect_url'  => Storage::disk('public')->url($extraction->getSuspectPath()),
-            'result_url'   => Storage::disk('public')->url($extraction->getResultPath()),
+            'id'               => $extraction->getId(),
+            'engraving_id'     => $extraction->getEngravingId(),
+            'suspect_url'      => Storage::disk('public')->url($extraction->getSuspectPath()),
+            'result_url'       => Storage::disk('public')->url($extraction->getResultPath()),
+            'similarity_score' => $extraction->getSimilarityScore(),
             'engraving'    => $engraving ? [
                 'id'           => $engraving->getId(),
                 'engraved_url' => Storage::disk('public')->url($engraving->getEngravedPath()),

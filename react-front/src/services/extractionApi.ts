@@ -12,6 +12,7 @@ export interface ExtractionResult {
     engraving_id: string;
     suspect_url: string;
     result_url: string;
+    similarity_score?: number | null;
     engraving?: ExtractionEngraving;
 }
 

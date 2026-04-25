@@ -19,9 +19,9 @@ interface WatermarkingServiceInterface
      * @param  string  $markedImageContents   Raw bytes of the suspect (potentially watermarked) image.
      * @param  string  $originalImageContents Raw bytes of the original clean image.
      * @param  string  $watermarkContents     Raw bytes of the original watermark.
-     * @return string                         Raw bytes of the extracted watermark image.
+     * @return ExtractionResult               Extracted watermark bytes + NCC similarity score [0, 1].
      */
-    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): string;
+    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): ExtractionResult;
 
     /**
      * Apply a named attack transformation to an image.
