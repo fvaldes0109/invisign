@@ -40,6 +40,7 @@ class TestAttackOnEngraving
             $attackedBytes,
             $originalImageContents,
             $watermarkContents,
+            $engraving->getAlpha(),
         );
 
         $id               = Uuid::uuid4()->toString();

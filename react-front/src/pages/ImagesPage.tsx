@@ -414,6 +414,7 @@ export function ImagesPage() {
     const [selectedWatermarkId, setSelectedWatermarkId] = useState<string | null>(null);
     const [engraving, setEngraving] = useState(false);
     const [engraveError, setEngraveError] = useState('');
+    const [engraveAlpha, setEngraveAlpha] = useState(0.00005);
     const [engravingCounts, setEngravingCounts] = useState<Record<string, number>>({});
 
     useEffect(() => {
@@ -484,6 +485,7 @@ export function ImagesPage() {
         setEngraveTarget(null);
         setEngraveError('');
         setSelectedWatermarkId(null);
+        setEngraveAlpha(0.00005);
     }
 
     async function handleEngrave() {
@@ -491,7 +493,7 @@ export function ImagesPage() {
         setEngraving(true);
         setEngraveError('');
         try {
-            const engraving = await createEngraving(engraveTarget.id, selectedWatermarkId);
+            const engraving = await createEngraving(engraveTarget.id, selectedWatermarkId, engraveAlpha);
             const watermark = watermarks.find(w => w.id === selectedWatermarkId)!;
             navigate(`/dashboard/engravings/${engraving.id}`, {
                 state: { engraving, image: engraveTarget, watermark },
@@ -659,6 +661,30 @@ export function ImagesPage() {
                                     ))}
                                 </div>
                             )}
+
+                            <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.5rem',
+                                padding: '0.85rem 1rem',
+                                borderRadius: 10,
+                                background: c.surfaceAlt,
+                                border: `1px solid ${c.border}`,
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: c.textMuted }}>Alpha (embedding strength)</span>
+                                    <span style={{ fontSize: '0.9rem', fontWeight: 700, color: c.accent }}>{engraveAlpha.toFixed(5)}</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min={0}
+                                    max={0.001}
+                                    step={0.00001}
+                                    value={engraveAlpha}
+                                    style={{ width: '100%', accentColor: c.accent }}
+                                    onChange={e => setEngraveAlpha(Number(e.target.value))}
+                                />
+                            </div>
 
                             {engraveError && <div style={s.engraveError}>⚠ {engraveError}</div>}
                         </div>

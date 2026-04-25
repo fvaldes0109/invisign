@@ -12,6 +12,7 @@ export interface Engraving {
     image_id: string;
     watermark_id: string;
     engraved_url: string;
+    alpha: number;
     image?: EngravingRelated;
     watermark?: EngravingRelated;
 }
@@ -46,11 +47,11 @@ export async function deleteEngraving(id: string): Promise<void> {
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 }
 
-export async function createEngraving(imageId: string, watermarkId: string): Promise<Engraving> {
+export async function createEngraving(imageId: string, watermarkId: string, alpha: number = 0.00005): Promise<Engraving> {
     const res = await fetch(`${BACKEND_URL}/api/engravings`, {
         method: 'POST',
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_id: imageId, watermark_id: watermarkId }),
+        body: JSON.stringify({ image_id: imageId, watermark_id: watermarkId, alpha }),
     });
     const body = await handleResponse<{ data: Engraving }>(res);
     return body.data;

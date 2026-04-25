@@ -4,12 +4,12 @@ namespace App\Services;
 
 class FakeWatermarkingService implements WatermarkingServiceInterface
 {
-    public function engrave(string $imageContents, string $watermarkContents): string
+    public function engrave(string $imageContents, string $watermarkContents, float $alpha = 0.00005): string
     {
         return $this->makeJpeg();
     }
 
-    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents): ExtractionResult
+    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents, float $alpha = 0.00005): ExtractionResult
     {
         return new ExtractionResult(bytes: $this->makeJpeg(), similarity: 1.0);
     }

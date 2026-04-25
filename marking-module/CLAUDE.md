@@ -19,7 +19,7 @@ SVD + Walsh-Hadamard watermarking (Valdés García & Morales Santiesteban, UH).
 
 **Key constants:**
 - `BLOCK_SIZE = 16` — image is split into 16×16 blocks
-- `ALPHA = 0.0001` — embedding strength (paper uses 0.7 for grayscale; tuned down for BGR)
+- `ALPHA = 0.00005` — default embedding strength; passed as `alpha` parameter to `mask_image()` and `extract_mask()` so callers can override it per-engraving
 
 **Embedding (`mask_image`):** deconstruct → forward Hadamard → batched SVD → modify largest SV per block → inverse Hadamard → reconstruct. Output has same dimensions as input (edge pixels outside block grid copied from original).
 
@@ -36,8 +36,8 @@ SVD + Walsh-Hadamard watermarking (Valdés García & Morales Santiesteban, UH).
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/health` | Liveness check |
-| `POST` | `/engrave` | Embed watermark into image |
-| `POST` | `/extract` | Recover watermark from marked image |
+| `POST` | `/engrave` | Embed watermark into image (form: `image`, `watermark`, optional `alpha` float) |
+| `POST` | `/extract` | Recover watermark from marked image (form: `marked_image`, `original_image`, `watermark`, optional `alpha` float) |
 | `POST` | `/apply-attack` | Apply attack transformation to image (form: `image`, `attack`, `params` JSON) |
 
 **Supported attacks:** `rotate` (param: `angle` degrees), `mirror`, `noise` (param: `std`), `brightness` (param: `factor`), `compression` (param: `quality` 1–100), `exposition` (param: `gamma` 0.1–3.0), `blur` (param: `radius` px), `pixelate` (param: `block_size` px).

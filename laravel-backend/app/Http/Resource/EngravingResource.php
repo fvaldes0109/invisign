@@ -21,6 +21,7 @@ class EngravingResource extends JsonResource
             'image_id'     => $engraving->getImageId(),
             'watermark_id' => $engraving->getWatermarkId(),
             'engraved_url' => Storage::disk('public')->url($engraving->getEngravedPath()),
+            'alpha'        => $engraving->getAlpha(),
             'image'        => $image ? [
                 'id'            => $image->getId(),
                 'name'          => $image->getName(),

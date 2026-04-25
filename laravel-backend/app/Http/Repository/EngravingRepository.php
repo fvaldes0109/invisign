@@ -18,6 +18,7 @@ class EngravingRepository
             'image_id'      => $engraving->getImageId(),
             'watermark_id'  => $engraving->getWatermarkId(),
             'engraved_path' => $engraving->getEngravedPath(),
+            'alpha'         => $engraving->getAlpha(),
         ]);
     }
 

@@ -12,6 +12,7 @@ class Engraving
         private readonly string    $imageId,
         private readonly string    $watermarkId,
         private readonly string    $engravedPath,
+        private readonly float     $alpha = 0.00005,
         private readonly ?Image     $image = null,
         private readonly ?Watermark $watermark = null,
     ) {
@@ -23,6 +24,7 @@ class Engraving
         string $imageId,
         string $watermarkId,
         string $engravedPath,
+        float  $alpha = 0.00005,
     ): self {
         return new self(
             id:           $id,
@@ -30,6 +32,7 @@ class Engraving
             imageId:      $imageId,
             watermarkId:  $watermarkId,
             engravedPath: $engravedPath,
+            alpha:        $alpha,
         );
     }
 
@@ -41,6 +44,7 @@ class Engraving
             imageId:      $e->image_id,
             watermarkId:  $e->watermark_id,
             engravedPath: $e->engraved_path,
+            alpha:        (float) ($e->alpha ?? 0.00005),
             image:        $e->relationLoaded('image') && $e->image
                               ? Image::fromEloquent($e->image)
                               : null,
@@ -55,6 +59,7 @@ class Engraving
     public function getImageId(): string       { return $this->imageId; }
     public function getWatermarkId(): string   { return $this->watermarkId; }
     public function getEngravedPath(): string  { return $this->engravedPath; }
+    public function getAlpha(): float          { return $this->alpha; }
     public function getImage(): ?Image         { return $this->image; }
     public function getWatermark(): ?Watermark { return $this->watermark; }
 }

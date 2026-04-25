@@ -59,12 +59,13 @@ async def health_check():
 async def engrave_images(
     image: UploadFile = File(...),
     watermark: UploadFile = File(...),
+    alpha: float = Form(0.00005),
 ):
     image_bytes = await image.read()
     watermark_bytes = await watermark.read()
 
     try:
-        result_image = engrave_mask_controller.process(image_bytes, watermark_bytes)
+        result_image = engrave_mask_controller.process(image_bytes, watermark_bytes, alpha=alpha)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except Exception:
@@ -79,6 +80,7 @@ async def extract_images(
     marked_image: UploadFile = File(...),
     original_image: UploadFile = File(...),
     watermark: UploadFile = File(...),
+    alpha: float = Form(0.00005),
 ):
     marked_image_bytes = await marked_image.read()
     original_image_bytes = await original_image.read()
@@ -86,7 +88,7 @@ async def extract_images(
 
     try:
         result_image, similarity = extract_mask_controller.process(
-            marked_image_bytes, original_image_bytes, watermark_bytes
+            marked_image_bytes, original_image_bytes, watermark_bytes, alpha=alpha
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

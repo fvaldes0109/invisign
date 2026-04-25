@@ -36,6 +36,7 @@ class EngravingController extends Controller
         $request->validate([
             'image_id'     => 'required|uuid',
             'watermark_id' => 'required|uuid',
+            'alpha'        => 'sometimes|numeric|min:0|max:1',
         ]);
 
         try {
@@ -43,6 +44,7 @@ class EngravingController extends Controller
                 imageId:     $request->input('image_id'),
                 watermarkId: $request->input('watermark_id'),
                 userId:      $request->user()->id,
+                alpha:       (float) $request->input('alpha', 0.00005),
             );
 
             return new EngravingResource($engraving);

@@ -19,8 +19,9 @@ def process(
     marked_image_bytes: bytes,
     original_image_bytes: bytes,
     watermark_bytes: bytes,
+    alpha: float = masking.ALPHA,
 ) -> tuple[np.ndarray, float]:
     marked = _decode(marked_image_bytes, "marked image")
     original = _decode(original_image_bytes, "original image")
     mark = _decode(watermark_bytes, "watermark")
-    return masking.extract_mask(marked, original, mark)
+    return masking.extract_mask(marked, original, mark, alpha=alpha)

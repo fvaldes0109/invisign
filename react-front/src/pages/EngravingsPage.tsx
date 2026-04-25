@@ -329,6 +329,15 @@ export function EngravingsPage() {
                                     <div style={s.cardInfo}>
                                         <span style={s.cardMeta}>Image</span>
                                         <span style={s.cardName} title={e.image?.name}>{e.image?.name ?? e.image_id}</span>
+                                        {e.alpha != null && (
+                                            <span style={{
+                                                fontSize: '0.7rem',
+                                                color: c.textDim,
+                                                fontWeight: 500,
+                                            }}>
+                                                α = {e.alpha.toFixed(5)}
+                                            </span>
+                                        )}
                                         <div style={s.wmBadge}>
                                             {e.watermark?.thumbnail_url && (
                                                 <img

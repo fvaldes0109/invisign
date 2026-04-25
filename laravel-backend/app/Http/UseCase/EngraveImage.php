@@ -22,7 +22,7 @@ class EngraveImage
     }
 
     /** @throws NotFound */
-    public function execute(string $imageId, string $watermarkId, int $userId): Engraving
+    public function execute(string $imageId, string $watermarkId, int $userId, float $alpha = 0.00005): Engraving
     {
         $image     = $this->imageRepository->findByIdForUser($imageId, $userId);
         $watermark = $this->watermarkRepository->findByIdForUser($watermarkId, $userId);
@@ -30,7 +30,7 @@ class EngraveImage
         $imageContents     = Storage::disk('public')->get($image->getImagePath());
         $watermarkContents = Storage::disk('public')->get($watermark->getImagePath());
 
-        $engravedBytes = $this->watermarkingService->engrave($imageContents, $watermarkContents);
+        $engravedBytes = $this->watermarkingService->engrave($imageContents, $watermarkContents, $alpha);
 
         $id            = Uuid::uuid4()->toString();
         $engravedPath  = "engravings/{$userId}/{$id}.jpg";
@@ -43,6 +43,7 @@ class EngraveImage
             imageId:      $imageId,
             watermarkId:  $watermarkId,
             engravedPath: $engravedPath,
+            alpha:        $alpha,
         );
 
         $this->engravingRepository->save($engraving);

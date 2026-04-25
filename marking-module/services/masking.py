@@ -95,7 +95,7 @@ def _validate_image(image: np.ndarray, role: str) -> None:
 # Embedding
 # ---------------------------------------------------------------------------
 
-def mask_image(image: np.ndarray, watermark: np.ndarray) -> np.ndarray:
+def mask_image(image: np.ndarray, watermark: np.ndarray, alpha: float = ALPHA) -> np.ndarray:
     """
     Embed ``watermark`` into ``image`` using the SVD + Hadamard scheme.
 
@@ -132,7 +132,7 @@ def mask_image(image: np.ndarray, watermark: np.ndarray) -> np.ndarray:
     # block. ``b`` starts at 1 so block 0 still carries a signal.
     b_idx = np.arange(1, num_blocks + 1, dtype=np.float64)
     sigma_w_per_block = S_w[np.arange(num_blocks) % num_sv]
-    term = (ALPHA * b_idx / m) * sigma_w_per_block              # (B,)
+    term = (alpha * b_idx / m) * sigma_w_per_block              # (B,)
     S[:, :, 0] += term[:, None]                                 # broadcast over C
 
     # Reconstruct B'_new = U · diag(S) · Vt, batched.
@@ -167,6 +167,7 @@ def _extract_once(
     Vtw: np.ndarray,
     num_sv: int,
     m: float,
+    alpha: float = ALPHA,
 ) -> np.ndarray:
     """Single-orientation extraction. Assumes the marked image is already
     in the same geometric frame as the original."""
@@ -200,7 +201,7 @@ def _extract_once(
     So = np.linalg.svd(Bo, compute_uv=False)
 
     b_idx = np.arange(1, num_blocks + 1, dtype=np.float64)
-    factors = (ALPHA * b_idx / m)
+    factors = (alpha * b_idx / m)
 
     diff_largest = Sm[..., 0] - So[..., 0]         # (B, C)
     samples = diff_largest / factors[:, None]
@@ -258,6 +259,7 @@ def extract_mask(
     masked_image: np.ndarray,
     original_image: np.ndarray,
     original_watermark: np.ndarray,
+    alpha: float = ALPHA,
 ) -> Tuple[np.ndarray, float]:
     """
     Recover the watermark from ``masked_image`` using the un-marked
@@ -289,7 +291,7 @@ def extract_mask(
     def _run(variant: np.ndarray):
         # NumPy SVD / matmul release the GIL, so threads give real parallelism.
         try:
-            candidate = _extract_once(variant, original_image, Uw, Vtw, num_sv, m)
+            candidate = _extract_once(variant, original_image, Uw, Vtw, num_sv, m, alpha)
         except ValueError as e:
             return None, float("-inf"), e
         return candidate, _ncc(candidate, ref_gray), None

@@ -15,7 +15,7 @@ def _decode(image_bytes: bytes, role: str) -> np.ndarray:
     return image
 
 
-def process(image_bytes: bytes, watermark_bytes: bytes) -> np.ndarray:
+def process(image_bytes: bytes, watermark_bytes: bytes, alpha: float = masking.ALPHA) -> np.ndarray:
     image = _decode(image_bytes, "cover image")
     mark = _decode(watermark_bytes, "watermark")
-    return masking.mask_image(image, mark)
+    return masking.mask_image(image, mark, alpha=alpha)
