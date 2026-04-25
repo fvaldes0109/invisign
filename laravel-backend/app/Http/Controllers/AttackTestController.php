@@ -39,7 +39,7 @@ class AttackTestController extends Controller
     {
         $request->validate([
             'engraving_id' => 'required|uuid',
-            'attack_type'  => 'required|string|in:rotate,mirror,noise,brightness,compression',
+            'attack_type'  => 'required|string|in:rotate,mirror,noise,brightness,compression,exposition,blur,pixelate',
             'params'       => 'sometimes|array',
         ]);
 

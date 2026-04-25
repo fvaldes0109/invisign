@@ -53,6 +53,24 @@ const ATTACKS: AttackDef[] = [
         description: 'Re-encode at low JPEG quality.',
         param: { key: 'quality', label: 'Quality (1–100)', min: 1, max: 100, step: 1, default: 20 },
     },
+    {
+        id: 'exposition',
+        label: 'Exposition',
+        description: 'Apply gamma correction to adjust exposure.',
+        param: { key: 'gamma', label: 'Gamma', min: 0.1, max: 3.0, step: 0.1, default: 1.5 },
+    },
+    {
+        id: 'blur',
+        label: 'Blur',
+        description: 'Apply Gaussian blur to the image.',
+        param: { key: 'radius', label: 'Radius (px)', min: 1, max: 20, step: 1, default: 5 },
+    },
+    {
+        id: 'pixelate',
+        label: 'Pixelate',
+        description: 'Pixelate the image by enlarging blocks.',
+        param: { key: 'block_size', label: 'Block size (px)', min: 2, max: 32, step: 1, default: 8 },
+    },
 ];
 
 const c = {

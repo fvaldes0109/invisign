@@ -4,7 +4,7 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
-SUPPORTED_ATTACKS = ("rotate", "mirror", "noise", "brightness", "compression")
+SUPPORTED_ATTACKS = ("rotate", "mirror", "noise", "brightness", "compression", "exposition", "blur", "pixelate")
 
 
 def apply_attack(image: np.ndarray, attack: str, **params) -> np.ndarray:
@@ -18,6 +18,12 @@ def apply_attack(image: np.ndarray, attack: str, **params) -> np.ndarray:
         return _adjust_brightness(image, float(params.get("factor", 1.3)))
     if attack == "compression":
         return _jpeg_compress(image, int(params.get("quality", 20)))
+    if attack == "exposition":
+        return _adjust_exposition(image, float(params.get("gamma", 1.5)))
+    if attack == "blur":
+        return _gaussian_blur(image, int(params.get("radius", 5)))
+    if attack == "pixelate":
+        return _pixelate(image, int(params.get("block_size", 8)))
     raise ValueError(f"unknown attack '{attack}'; supported: {', '.join(SUPPORTED_ATTACKS)}")
 
 
@@ -49,3 +55,22 @@ def _jpeg_compress(image: np.ndarray, quality: int) -> np.ndarray:
     if not ok:
         raise ValueError("failed to JPEG-encode image for compression attack")
     return cv2.imdecode(encoded, cv2.IMREAD_COLOR)
+
+
+def _adjust_exposition(image: np.ndarray, gamma: float) -> np.ndarray:
+    gamma = max(0.1, gamma)
+    lut = (np.power(np.arange(256) / 255.0, gamma) * 255).astype(np.uint8)
+    return lut[image]
+
+
+def _gaussian_blur(image: np.ndarray, radius: int) -> np.ndarray:
+    radius = max(1, radius)
+    ksize = 2 * radius + 1
+    return cv2.GaussianBlur(image, (ksize, ksize), 0)
+
+
+def _pixelate(image: np.ndarray, block_size: int) -> np.ndarray:
+    block_size = max(2, block_size)
+    h, w = image.shape[:2]
+    small = cv2.resize(image, (max(1, w // block_size), max(1, h // block_size)), interpolation=cv2.INTER_LINEAR)
+    return cv2.resize(small, (w, h), interpolation=cv2.INTER_NEAREST)

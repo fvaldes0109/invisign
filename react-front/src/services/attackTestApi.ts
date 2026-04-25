@@ -1,12 +1,15 @@
 import { BACKEND_URL } from '../config';
 
-export type AttackType = 'rotate' | 'mirror' | 'noise' | 'brightness' | 'compression';
+export type AttackType = 'rotate' | 'mirror' | 'noise' | 'brightness' | 'compression' | 'exposition' | 'blur' | 'pixelate';
 
 export interface AttackTestParams {
     angle?: number;
     std?: number;
     factor?: number;
     quality?: number;
+    gamma?: number;
+    radius?: number;
+    block_size?: number;
 }
 
 export interface AttackTestResult {

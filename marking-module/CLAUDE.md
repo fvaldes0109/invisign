@@ -10,7 +10,7 @@ controllers/       # Decode request bytes → call service → return ndarray
 services/
   blocks.py        # Block split/stitch (deconstruct / reconstruct)
   masking.py       # SVD + Walsh-Hadamard core algorithm
-  attacks.py       # Image attack transformations (rotate, mirror, noise, brightness, compression)
+  attacks.py       # Image attack transformations (rotate, mirror, noise, brightness, compression, exposition, blur, pixelate)
 ```
 
 ## Algorithm
@@ -40,7 +40,7 @@ SVD + Walsh-Hadamard watermarking (Valdés García & Morales Santiesteban, UH).
 | `POST` | `/extract` | Recover watermark from marked image |
 | `POST` | `/apply-attack` | Apply attack transformation to image (form: `image`, `attack`, `params` JSON) |
 
-**Supported attacks:** `rotate` (param: `angle` degrees), `mirror`, `noise` (param: `std`), `brightness` (param: `factor`), `compression` (param: `quality` 1–100).
+**Supported attacks:** `rotate` (param: `angle` degrees), `mirror`, `noise` (param: `std`), `brightness` (param: `factor`), `compression` (param: `quality` 1–100), `exposition` (param: `gamma` 0.1–3.0), `blur` (param: `radius` px), `pixelate` (param: `block_size` px).
 
 ## No tests
 
