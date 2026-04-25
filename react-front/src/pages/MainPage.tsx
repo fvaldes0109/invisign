@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-import heroImg from '../assets/hero.png';
-import usecasePhotoImg from '../assets/usecase-photo.png';
-import usecaseVideoImg from '../assets/usecase-video.png';
+import heroImg from '../assets/hero.webp';
+import usecasePhotoImg from '../assets/usecase-photo.webp';
+import usecaseEcomImg from '../assets/usecase-ecom.webp';
+import usecasePressImg from '../assets/usecase-press.webp';
 
 const colors = {
     bg: '#07090F',
@@ -450,45 +451,54 @@ const styles = {
     },
 
     // ── Use cases ─────────────────────────────────────────────────────────────
-    useCaseGrid: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+    useCaseList: {
+        display: 'flex',
+        flexDirection: 'column' as const,
         gap: '2rem',
     },
-    useCaseCard: (accent: string): React.CSSProperties => ({
-        background: colors.surface,
-        border: `1px solid ${colors.border}`,
-        borderRadius: 20,
-        overflow: 'hidden',
-        borderTop: `3px solid ${accent}`,
-    }),
-    useCaseVisual: (from: string, to: string): React.CSSProperties => ({
-        height: 180,
-        background: `linear-gradient(135deg, ${from}, ${to})`,
+    useCaseRow: (accent: string): React.CSSProperties => ({
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '3.5rem',
+        borderRadius: 20,
+        border: `1px solid ${colors.border}`,
+        borderLeft: `4px solid ${accent}`,
+        background: colors.surface,
+        overflow: 'hidden',
+        minHeight: 380,
     }),
-    useCaseBody: {
-        padding: '1.75rem',
+    useCaseImgPane: {
+        flex: '0 0 55%',
+        position: 'relative' as const,
+        overflow: 'hidden',
+    },
+    useCaseImg: {
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover' as const,
+        display: 'block',
+    },
+    useCaseTextPane: {
+        flex: 1,
+        padding: '3rem',
+        display: 'flex',
+        flexDirection: 'column' as const,
+        justifyContent: 'center',
+        gap: '1rem',
     },
     useCaseTitle: {
-        fontWeight: 700,
-        fontSize: '1.15rem',
-        marginBottom: '0.6rem',
+        fontWeight: 800,
+        fontSize: '1.35rem',
         color: colors.text,
+        letterSpacing: '-0.02em',
     },
     useCaseDesc: {
-        fontSize: '0.9rem',
+        fontSize: '0.925rem',
         color: colors.textMuted,
-        lineHeight: 1.7,
+        lineHeight: 1.75,
     },
     useCaseTags: {
         display: 'flex',
         gap: '0.5rem',
         flexWrap: 'wrap' as const,
-        marginTop: '1.2rem',
     },
     tag: (color: string): React.CSSProperties => ({
         padding: '0.25rem 0.7rem',
@@ -659,68 +669,68 @@ const styles = {
 
 const attacks = [
     { label: 'JPEG compression', pass: true },
-    { label: 'Cropping & resizing', pass: true },
-    { label: 'Colour grading & filters', pass: true },
-    { label: 'Screenshot capture', pass: true },
     { label: 'Rotation & flipping', pass: true },
-    { label: 'Noise addition', pass: true },
+    { label: 'Gaussian noise', pass: true },
+    { label: 'Brightness & exposure', pass: true },
+    { label: 'Blur', pass: true },
+    { label: 'Pixelation', pass: true },
 ];
 
 const features = [
     {
         icon: '🔒',
         color: colors.primary,
-        title: 'Invisible & Non-intrusive',
-        desc: 'Watermarks are embedded at the pixel frequency level, completely undetectable to the human eye. Your images look exactly as intended.',
+        title: 'Completely Invisible',
+        desc: 'The watermark is hidden inside the image at a level the human eye cannot detect. Your photo looks exactly the same — before and after.',
     },
     {
         icon: '🛡️',
         color: colors.accent,
-        title: 'Attack-Resistant',
-        desc: 'Survives compression, cropping, colour grading, resizing, and more. The mark persists through virtually any real-world image manipulation.',
+        title: 'Survives Real-world Edits',
+        desc: 'Compression, rotation, noise, blur, brightness changes — the mark holds up. Even a degraded or re-exported copy can still be verified.',
     },
     {
         icon: '⚡',
         color: colors.warning,
-        title: 'Instant Embedding & Extraction',
-        desc: 'Embed a watermark in seconds and extract it just as fast. Built for scale, whether you\'re protecting a single photo or a full film library.',
+        title: 'Fast Embedding & Extraction',
+        desc: 'Embed a watermark in seconds and recover it just as quickly. No waiting — results are instant whether you\'re protecting one photo or many.',
     },
     {
-        icon: '🎬',
-        color: colors.success,
-        title: 'Video & Film Support',
-        desc: 'Works frame-by-frame on video content. Protect theatrical releases, streaming content, and TV broadcasts with frame-level traceability.',
-    },
-    {
-        icon: '📋',
+        icon: '🖼️',
         color: '#A855F7',
-        title: 'Audit Trail',
-        desc: 'Every watermark carries a unique payload you define — owner ID, timestamp, license. Extract it later to prove provenance in any dispute.',
+        title: 'Your Logo as the Mark',
+        desc: 'The watermark is an image — your logo, signature, or any square PNG. Extraction gives you back a visible reconstruction you can verify at a glance.',
+    },
+    {
+        icon: '📊',
+        color: colors.success,
+        title: 'Recovery Confidence Score',
+        desc: 'Every extraction produces a similarity score from 0 to 1 telling you how clearly the mark was recovered — so you always know how reliable the result is.',
     },
     {
         icon: '🌐',
         color: '#EC4899',
-        title: 'API-First Design',
-        desc: 'Integrate watermarking directly into your existing DAM, CMS, or distribution pipeline via our REST API with full SDK support.',
+        title: 'Full Web Platform',
+        desc: 'Dashboard, user accounts, image library, attack simulation, and extraction — all in one place, accessible from any browser.',
     },
 ];
 
 const steps = [
     {
-        title: 'Upload your content',
-        desc: 'Upload any image or point us to a video file. Supports JPEG, PNG, WebP, TIFF, and common video formats.',
+        title: 'Upload your image',
+        desc: 'Upload the photo you want to protect. JPEG, PNG, and WebP are all supported.',
     },
     {
-        title: 'Define your watermark payload',
-        desc: 'Set the embedded data: your owner ID, a timestamp, a license code, or any binary payload up to 128 bits.',
+        title: 'Choose a watermark',
+        desc: 'Pick a square PNG — your logo, signature, or any symbol. This becomes the invisible mark hidden inside your photo.',
     },
     {
-        title: 'Embed in one click',
-        desc: 'Our algorithm encodes your payload invisibly into the content. Download the protected file — visually identical to the original.',
+        title: 'Embed',
+        desc: 'The algorithm encodes your mark invisibly into the image. The result is pixel-perfect to the eye but carries a hidden signature only you can verify.',
     },
     {
         title: 'Extract & verify anytime',
-        desc: 'Upload any suspected copy — even a degraded one — and extract the watermark to prove ownership in seconds.',
+        desc: 'Found a suspected copy? Upload it along with the originals and get a visual recovery of the embedded mark plus a confidence score.',
     },
 ];
 
@@ -809,18 +819,18 @@ export function MainPage() {
                 <div>
                     <div style={{ ...styles.heroBadge, animation: 'fadeInUp 0.6s ease both' }}>
                         <span style={{ ...styles.heroDot, animation: 'pulseDot 2s ease-in-out infinite' }} />
-                        Invisible · Robust · Traceable
+                        Invisible · Robust · Verifiable
                     </div>
 
                     <h1 style={{ ...styles.heroTitle, animation: 'fadeInUp 0.7s 0.1s ease both' }}>
-                        Protect your visuals with{' '}
+                        Embed and extract{' '}
                         <span style={styles.heroTitleGrad}>invisible watermarks</span>
                     </h1>
 
                     <p style={{ ...styles.heroSub, animation: 'fadeInUp 0.7s 0.2s ease both' }}>
-                        Embed imperceptible copyright marks into images and video. Your content
-                        looks untouched, but the mark persists through compression, cropping,
-                        and edits — giving you proof of ownership wherever it ends up.
+                        Hide an invisible ownership mark inside any image. Your photo looks
+                        completely untouched, but the mark can be recovered and verified at any
+                        time — even after compression, edits, or quality loss.
                     </p>
 
                     <div style={{ ...styles.heroActions, animation: 'fadeInUp 0.7s 0.32s ease both' }}>
@@ -830,12 +840,12 @@ export function MainPage() {
 
                     <div style={{ ...styles.heroStats, animation: 'fadeInUp 0.7s 0.45s ease both' }}>
                         <div style={styles.heroStat}>
-                            <span style={styles.heroStatValue}>99.8%</span>
-                            <span style={styles.heroStatLabel}>Extraction accuracy</span>
+                            <span style={styles.heroStatValue}>100%</span>
+                            <span style={styles.heroStatLabel}>Visually identical</span>
                         </div>
                         <div style={styles.heroStat}>
-                            <span style={styles.heroStatValue}>12+</span>
-                            <span style={styles.heroStatLabel}>Attack types resisted</span>
+                            <span style={styles.heroStatValue}>6</span>
+                            <span style={styles.heroStatLabel}>Attack types survived</span>
                         </div>
                         <div style={styles.heroStat}>
                             <span style={styles.heroStatValue}>&lt;1s</span>
@@ -867,17 +877,17 @@ export function MainPage() {
                         {/* Card details */}
                         <div style={styles.heroCardBody}>
                             <div style={styles.heroCardRow}>
-                                <span style={styles.heroCardLabel}>Payload</span>
-                                <span style={styles.heroCardVal(colors.primaryLight)}>owner:usr_9f3a · ts:1743364800</span>
+                                <span style={styles.heroCardLabel}>Visible change</span>
+                                <span style={styles.heroCardVal(colors.primaryLight)}>None — imperceptible to the eye</span>
                             </div>
                             <div style={styles.heroCardRow}>
-                                <span style={styles.heroCardLabel}>Imperceptibility</span>
-                                <span style={styles.heroCardVal(colors.success)}>PSNR 48.3 dB</span>
+                                <span style={styles.heroCardLabel}>Image quality</span>
+                                <span style={styles.heroCardVal(colors.success)}>Preserved · PSNR 48.3 dB</span>
                             </div>
                             <div>
                                 <div style={{ ...styles.heroCardRow, marginBottom: '0.4rem' }}>
-                                    <span style={styles.heroCardLabel}>Robustness score</span>
-                                    <span style={styles.heroCardVal(colors.accent)}>96 / 100</span>
+                                    <span style={styles.heroCardLabel}>Recovery confidence</span>
+                                    <span style={styles.heroCardVal(colors.accent)}>96%</span>
                                 </div>
                                 <div style={styles.progressBar}>
                                     <div style={{
@@ -895,10 +905,10 @@ export function MainPage() {
             <div id="features" style={{ background: colors.surface, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }}>
                 <div style={styles.section}>
                     <div style={styles.sectionLabel}>Everything you need</div>
-                    <h2 style={styles.sectionTitle}>Built for serious copyright protection</h2>
+                    <h2 style={styles.sectionTitle}>Built for invisible copyright protection</h2>
                     <p style={styles.sectionSub}>
-                        From a single stock photo to an entire film catalog, WaterMark gives you
-                        the tools to embed, manage, and verify ownership at any scale.
+                        From embedding your first mark to simulating attacks and verifying
+                        ownership — everything is in one place.
                     </p>
 
                     <div ref={featuresRef} style={styles.featureGrid}>
@@ -931,8 +941,8 @@ export function MainPage() {
                     <div style={styles.sectionLabel}>Simple process</div>
                     <h2 style={styles.sectionTitle}>How it works</h2>
                     <p style={styles.sectionSub}>
-                        Embed and verify invisible watermarks in four straightforward steps —
-                        no technical expertise required.
+                        Four steps from upload to verified ownership — the algorithm handles
+                        all the frequency-domain maths automatically.
                     </p>
 
                     <div ref={stepsRef} style={styles.stepsGrid}>
@@ -958,22 +968,24 @@ export function MainPage() {
             <div id="use-cases" style={{ background: colors.bg }}>
                 <div style={styles.section}>
                     <div style={styles.sectionLabel}>Use cases</div>
-                    <h2 style={styles.sectionTitle}>Protecting images, video & beyond</h2>
+                    <h2 style={styles.sectionTitle}>Protecting your images</h2>
                     <p style={styles.sectionSub}>
-                        Whether you distribute photographs, films, or broadcast content, invisible
-                        watermarking adapts to every format and workflow.
+                        Whether you distribute stock photographs or press media, invisible
+                        watermarking adapts to every workflow.
                     </p>
 
-                    <div ref={useCasesRef} style={styles.useCaseGrid}>
+                    <div ref={useCasesRef} style={styles.useCaseList}>
+
+                        {/* Photography — image left */}
                         <div style={{
-                            ...styles.useCaseCard(colors.primary),
+                            ...styles.useCaseRow(colors.primary),
                             opacity: useCasesInView ? undefined : 0,
                             animation: useCasesInView ? 'slideInLeft 0.65s ease both' : undefined,
                         }}>
-                            <div style={{ ...styles.useCaseVisual('#1a1f45', '#0d1235'), padding: 0 }}>
-                            <img src={usecasePhotoImg} alt="Photography use case" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                            <div style={styles.useCaseBody}>
+                            <div style={styles.useCaseImgPane}>
+                                <img src={usecasePhotoImg} alt="Photography use case" style={styles.useCaseImg} />
+                            </div>
+                            <div style={styles.useCaseTextPane}>
                                 <div style={styles.useCaseTitle}>Photography & Stock Images</div>
                                 <div style={styles.useCaseDesc}>
                                     Photographers and stock agencies can protect every file in their
@@ -989,29 +1001,57 @@ export function MainPage() {
                             </div>
                         </div>
 
+                        {/* E-commerce — image right */}
                         <div style={{
-                            ...styles.useCaseCard(colors.accent),
+                            ...styles.useCaseRow(colors.warning),
+                            flexDirection: 'row-reverse',
                             opacity: useCasesInView ? undefined : 0,
-                            animation: useCasesInView ? 'slideInRight 0.65s 0.1s ease both' : undefined,
+                            animation: useCasesInView ? 'slideInRight 0.65s 0.12s ease both' : undefined,
                         }}>
-                            <div style={{ ...styles.useCaseVisual('#041520', '#091a28'), padding: 0 }}>
-                            <img src={usecaseVideoImg} alt="Film & streaming use case" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        </div>
-                            <div style={styles.useCaseBody}>
-                                <div style={styles.useCaseTitle}>Film, TV & Streaming</div>
+                            <div style={styles.useCaseImgPane}>
+                                <img src={usecaseEcomImg} alt="E-commerce use case" style={styles.useCaseImg} />
+                            </div>
+                            <div style={styles.useCaseTextPane}>
+                                <div style={styles.useCaseTitle}>E-commerce & Product Photos</div>
                                 <div style={styles.useCaseDesc}>
-                                    Embed unique per-distributor watermarks into screeners, theatrical
-                                    prints, and streaming masters. When a pirated copy surfaces, the
-                                    mark reveals exactly which distribution channel it leaked from —
-                                    even if the video was re-encoded or captured from a screen.
+                                    Retailers and brands can invisibly mark every product image
+                                    before distribution. Track unauthorised use across competitor
+                                    sites and marketplaces, and enforce licensing with verifiable
+                                    proof of origin.
                                 </div>
                                 <div style={styles.useCaseTags}>
-                                    {['Screeners', 'Streaming', 'Broadcast', 'Theatrical'].map(t => (
-                                        <span key={t} style={styles.tag(colors.accent)}>{t}</span>
+                                    {['Product shots', 'Catalogues', 'Marketplaces', 'Brand assets'].map(t => (
+                                        <span key={t} style={styles.tag(colors.warning)}>{t}</span>
                                     ))}
                                 </div>
                             </div>
                         </div>
+
+                        {/* Press — image left */}
+                        <div style={{
+                            ...styles.useCaseRow('#A855F7'),
+                            opacity: useCasesInView ? undefined : 0,
+                            animation: useCasesInView ? 'slideInLeft 0.65s 0.24s ease both' : undefined,
+                        }}>
+                            <div style={styles.useCaseImgPane}>
+                                <img src={usecasePressImg} alt="News & press use case" style={styles.useCaseImg} />
+                            </div>
+                            <div style={styles.useCaseTextPane}>
+                                <div style={styles.useCaseTitle}>News & Press Media</div>
+                                <div style={styles.useCaseDesc}>
+                                    Photojournalists and agencies can sign every image at capture
+                                    time. If an editorial photo is stripped of its metadata and
+                                    republished without credit, the embedded mark still identifies
+                                    the original author.
+                                </div>
+                                <div style={styles.useCaseTags}>
+                                    {['Photojournalism', 'Wire services', 'Editorial', 'Archives'].map(t => (
+                                        <span key={t} style={styles.tag('#A855F7')}>{t}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -1020,7 +1060,7 @@ export function MainPage() {
             <div style={styles.resistSection}>
                 <div style={styles.resistInner}>
                     <div style={styles.sectionLabel}>Robustness</div>
-                    <h2 style={styles.sectionTitle}>The mark survives any attack</h2>
+                    <h2 style={styles.sectionTitle}>Tested against six real-world attacks</h2>
 
                     <div style={styles.resistGrid}>
                         {/* Attack list */}
@@ -1056,18 +1096,18 @@ export function MainPage() {
                             {[
                                 {
                                     icon: '🧮',
-                                    title: 'Frequency-domain encoding',
-                                    desc: 'Payloads are embedded in the mid-frequency DCT coefficients of the image, the same domain JPEG uses to store most visual information. This makes the mark inherently tolerant of compression.',
+                                    title: 'Hidden in the frequency domain',
+                                    desc: 'The mark is embedded in how pixel intensities vary across the image — not in the pixels themselves. Changes at this level are invisible to the eye but survive most edits.',
+                                },
+                                {
+                                    icon: '🔢',
+                                    title: 'Mathematically encoded',
+                                    desc: 'Your watermark\'s visual structure is broken down into numerical components and encoded into the image. Extraction reverses this process to reconstruct the original mark.',
                                 },
                                 {
                                     icon: '🔁',
-                                    title: 'Redundant distribution',
-                                    desc: 'Each bit of the payload is distributed redundantly across thousands of coefficients. Even if large portions of the image are cropped away, the remaining coefficients can reconstruct the full payload.',
-                                },
-                                {
-                                    icon: '📊',
-                                    title: 'Error-correcting codes',
-                                    desc: 'Reed-Solomon error correction is applied before embedding. The decoder can recover the payload accurately even when a significant percentage of coefficients are corrupted by attacks.',
+                                    title: 'Spread across the whole image',
+                                    desc: 'The mark is distributed across every region of the photo. Even if part of the image is cropped, compressed, or distorted, enough of the mark remains to recover and verify it.',
                                 },
                             ].map((item, i) => (
                                 <div
@@ -1101,15 +1141,16 @@ export function MainPage() {
                     }}
                 >
                     <h2 style={styles.ctaTitle}>
-                        Ready to protect your{' '}
-                        <span style={styles.heroTitleGrad}>creative work?</span>
+                        Try the{' '}
+                        <span style={styles.heroTitleGrad}>watermarking demo</span>
                     </h2>
                     <p style={styles.ctaSub}>
-                        Create a free account and embed your first watermark in under a minute.
-                        No credit card required.
+                        Create an account, upload an image and a watermark, and see it
+                        in action — embedding, attack simulation, and ownership verification,
+                        all from your browser.
                     </p>
                     <div style={styles.ctaActions}>
-                        <Link to="/register" style={styles.btnCtaPrimary}>Create free account</Link>
+                        <Link to="/register" style={styles.btnCtaPrimary}>Create an account</Link>
                         <Link to="/login" style={styles.btnCtaSecondary}>Sign in</Link>
                     </div>
                 </div>
@@ -1118,9 +1159,9 @@ export function MainPage() {
             {/* ── Footer ── */}
             <footer>
                 <div style={styles.footer}>
-                    <span>© 2026 WaterMark. All rights reserved.</span>
+                    <span>© 2026 WaterMark — Capstone project</span>
                     <span style={{ color: colors.textDim }}>
-                        Invisible watermarking for the modern web.
+                        Invisible watermarking · SVD + Walsh-Hadamard
                     </span>
                 </div>
             </footer>
