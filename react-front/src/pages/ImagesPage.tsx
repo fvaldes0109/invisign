@@ -414,7 +414,7 @@ export function ImagesPage() {
     const [selectedWatermarkId, setSelectedWatermarkId] = useState<string | null>(null);
     const [engraving, setEngraving] = useState(false);
     const [engraveError, setEngraveError] = useState('');
-    const [engraveAlpha, setEngraveAlpha] = useState(0.00005);
+    const [engraveAlpha, setEngraveAlpha] = useState(0.01);
     const [engravingCounts, setEngravingCounts] = useState<Record<string, number>>({});
 
     useEffect(() => {
@@ -678,8 +678,8 @@ export function ImagesPage() {
                                 <input
                                     type="range"
                                     min={0}
-                                    max={0.001}
-                                    step={0.00001}
+                                    max={0.1}
+                                    step={0.001}
                                     value={engraveAlpha}
                                     style={{ width: '100%', accentColor: c.accent }}
                                     onChange={e => setEngraveAlpha(Number(e.target.value))}

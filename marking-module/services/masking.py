@@ -130,7 +130,7 @@ def mask_image(image: np.ndarray, watermark: np.ndarray, alpha: float = ALPHA) -
 
     # σ_k = σ_B' + (α·b / m) · σ_W, applied to the largest SV of every
     # block. ``b`` starts at 1 so block 0 still carries a signal.
-    b_idx = np.arange(1, num_blocks + 1, dtype=np.float64)
+    b_idx = np.minimum(np.arange(1, num_blocks + 1, dtype=np.float64), float(num_sv))
     sigma_w_per_block = S_w[np.arange(num_blocks) % num_sv]
     term = (alpha * b_idx / m) * sigma_w_per_block              # (B,)
     S[:, :, 0] += term[:, None]                                 # broadcast over C
@@ -200,7 +200,7 @@ def _extract_once(
     Sm = np.linalg.svd(Bm, compute_uv=False)       # (B, C, k)
     So = np.linalg.svd(Bo, compute_uv=False)
 
-    b_idx = np.arange(1, num_blocks + 1, dtype=np.float64)
+    b_idx = np.minimum(np.arange(1, num_blocks + 1, dtype=np.float64), float(num_sv))
     factors = (alpha * b_idx / m)
 
     diff_largest = Sm[..., 0] - So[..., 0]         # (B, C)

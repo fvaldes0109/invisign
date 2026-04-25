@@ -119,6 +119,21 @@ const s: Record<string, React.CSSProperties> = {
         color: c.error,
         fontSize: '0.85rem',
     },
+    uploadHint: {
+        fontSize: '0.8rem',
+        color: c.textDim,
+        marginBottom: '1rem',
+        lineHeight: 1.5,
+    },
+    uploadNotice: {
+        marginTop: '0.75rem',
+        padding: '0.65rem 1rem',
+        borderRadius: 8,
+        background: 'rgba(6,182,212,0.08)',
+        border: '1px solid rgba(6,182,212,0.25)',
+        color: c.accent,
+        fontSize: '0.85rem',
+    },
 
     // ── List ─────────────────────────────────────────────────────────────────
     listHeader: {
@@ -304,6 +319,7 @@ export function WatermarksPage() {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [watermarkName, setWatermarkName] = useState('');
     const [uploadError, setUploadError] = useState('');
+    const [resizeNotice, setResizeNotice] = useState('');
     const [previewWatermark, setPreviewWatermark] = useState<Watermark | null>(null);
     const [engravingCounts, setEngravingCounts] = useState<Record<string, number>>({});
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -325,8 +341,16 @@ export function WatermarksPage() {
 
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         setUploadError('');
+        setResizeNotice('');
         const file = e.target.files?.[0] ?? null;
         if (!file) { setSelectedFile(null); return; }
+
+        if (file.type !== 'image/png') {
+            setUploadError('Only PNG files are accepted as watermarks.');
+            setSelectedFile(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
 
         const url = URL.createObjectURL(file);
         const img = new window.Image();
@@ -336,6 +360,19 @@ export function WatermarksPage() {
                 setUploadError('The watermark must be square — width and height must be equal.');
                 setSelectedFile(null);
                 if (fileInputRef.current) fileInputRef.current.value = '';
+                return;
+            }
+            const MAX = 128;
+            if (img.naturalWidth > MAX) {
+                const canvas = document.createElement('canvas');
+                canvas.width = MAX;
+                canvas.height = MAX;
+                canvas.getContext('2d')!.drawImage(img, 0, 0, MAX, MAX);
+                canvas.toBlob(blob => {
+                    if (!blob) { setSelectedFile(file); return; }
+                    setSelectedFile(new File([blob], file.name, { type: 'image/png' }));
+                    setResizeNotice(`Image was ${img.naturalWidth}×${img.naturalHeight} — automatically resized to ${MAX}×${MAX} before upload.`);
+                }, 'image/png');
             } else {
                 setSelectedFile(file);
             }
@@ -379,6 +416,9 @@ export function WatermarksPage() {
                 {/* ── Upload form ── */}
                 <div style={s.uploadCard}>
                     <div style={s.uploadCardTitle}>Upload a new watermark</div>
+                    <div style={s.uploadHint}>
+                        Only PNG files are accepted. Smaller watermarks produce better results — a square PNG of 128×128 px or less is recommended. The fewer singular values embedded, the more robustly each one is recovered during extraction. Images larger than 128×128 will be automatically resized to that size.
+                    </div>
                     <div style={s.uploadRow}>
                         <div
                             style={s.uploadZone}
@@ -387,13 +427,13 @@ export function WatermarksPage() {
                             <span style={s.uploadZoneIcon}>📂</span>
                             {selectedFile
                                 ? <span style={s.uploadZoneFilename}>{selectedFile.name}</span>
-                                : <span style={s.uploadZoneText}>Click to select an image — JPEG, PNG, WebP · must be square</span>
+                                : <span style={s.uploadZoneText}>Click to select a PNG image · must be square</span>
                             }
                         </div>
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                            accept="image/png"
                             style={{ display: 'none' }}
                             onChange={handleFileChange}
                         />
@@ -416,6 +456,7 @@ export function WatermarksPage() {
                         style={s.nameInput}
                     />
                     {uploadError && <div style={s.uploadError}>⚠ {uploadError}</div>}
+                    {resizeNotice && <div style={s.uploadNotice}>ℹ {resizeNotice}</div>}
                 </div>
 
                 {/* ── List ── */}

@@ -46,7 +46,7 @@ class WatermarkController extends Controller
     public function store(Request $request): JsonResource
     {
         $request->validate([
-            'image' => 'required|image|mimes:jpeg,jpg,png,webp|max:51200',
+            'image' => 'required|image|mimes:png|max:51200',
             'name'  => 'required|string|max:255',
         ]);
 
