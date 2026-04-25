@@ -798,7 +798,7 @@ export function MainPage() {
             <nav style={styles.nav}>
                 <Link to="/" style={styles.navLogo}>
                     <div style={styles.navLogoMark}>W</div>
-                    <span style={styles.navLogoText}>WaterMark</span>
+                    <span style={styles.navLogoText}>Invisign</span>
                 </Link>
 
                 <div style={styles.navLinks}>
@@ -862,7 +862,7 @@ export function MainPage() {
                             <div style={styles.heroCardDot('#FF5F57')} />
                             <div style={styles.heroCardDot('#FEBC2E')} />
                             <div style={styles.heroCardDot('#28C840')} />
-                            <span style={styles.heroCardTitle}>watermark-studio · embed</span>
+                            <span style={styles.heroCardTitle}>invisign · embed</span>
                         </div>
 
                         {/* Image preview area */}
@@ -1159,7 +1159,7 @@ export function MainPage() {
             {/* ── Footer ── */}
             <footer>
                 <div style={styles.footer}>
-                    <span>© 2026 WaterMark — Capstone project</span>
+                    <span>© 2026 Invisign — Capstone project</span>
                     <span style={{ color: colors.textDim }}>
                         Invisible watermarking · SVD + Walsh-Hadamard
                     </span>

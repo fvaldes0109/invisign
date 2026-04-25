@@ -340,7 +340,7 @@ export function RegisterPage() {
 
                 <Link to="/" style={s.logo}>
                     <div style={s.logoMark}>W</div>
-                    <span style={s.logoText}>WaterMark</span>
+                    <span style={s.logoText}>Invisign</span>
                 </Link>
 
                 <div style={s.leftContent}>
@@ -350,7 +350,7 @@ export function RegisterPage() {
                             <span style={s.leftTitleGrad}>creative work</span>
                         </h2>
                         <p style={s.leftSub}>
-                            Join photographers, filmmakers, and studios who trust WaterMark
+                            Join photographers and studios who trust Invisign
                             to guard their content with invisible, attack-resistant watermarks.
                         </p>
                     </div>

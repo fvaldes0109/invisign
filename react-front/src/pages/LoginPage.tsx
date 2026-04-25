@@ -324,7 +324,7 @@ export function LoginPage() {
 
                 <Link to="/" style={s.logo}>
                     <div style={s.logoMark}>W</div>
-                    <span style={s.logoText}>WaterMark</span>
+                    <span style={s.logoText}>Invisign</span>
                 </Link>
 
                 <div style={s.leftContent}>
