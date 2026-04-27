@@ -357,7 +357,7 @@ export function WatermarksPage() {
         img.onload = () => {
             URL.revokeObjectURL(url);
             if (img.naturalWidth !== img.naturalHeight) {
-                setUploadError('The watermark must be square — width and height must be equal.');
+                setUploadError('The watermark must be square, width and height must be equal.');
                 setSelectedFile(null);
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 return;
@@ -417,7 +417,7 @@ export function WatermarksPage() {
                 <div style={s.uploadCard}>
                     <div style={s.uploadCardTitle}>Upload a new watermark</div>
                     <div style={s.uploadHint}>
-                        Only PNG files are accepted. Smaller watermarks produce better results — a square PNG of 128×128 px or less is recommended. The fewer singular values embedded, the more robustly each one is recovered during extraction. Images larger than 128×128 will be automatically resized to that size.
+                        Only PNG files are accepted. Smaller watermarks produce better results, a square PNG of 128×128 px or less is recommended. The fewer singular values embedded, the more robustly each one is recovered during extraction. Images larger than 128×128 will be automatically resized to that size.
                     </div>
                     <div style={s.uploadRow}>
                         <div

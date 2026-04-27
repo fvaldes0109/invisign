@@ -295,7 +295,7 @@ const s: Record<string, React.CSSProperties> = {
 const steps = [
     {
         title: 'Create your account',
-        desc: 'Free to start — no credit card required.',
+        desc: 'Free to start, no credit card required.',
     },
     {
         title: 'Upload and watermark',

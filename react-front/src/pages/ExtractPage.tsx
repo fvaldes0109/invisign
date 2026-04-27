@@ -381,7 +381,7 @@ export function ExtractPage() {
                         <span style={s.uploadIcon}>🔎</span>
                         {suspectFile
                             ? <span style={s.uploadFilename}>{suspectFile.name}</span>
-                            : <span style={s.uploadText}>Click to select an image — JPEG, PNG, WebP</span>
+                            : <span style={s.uploadText}>Click to select an image, JPEG, PNG, WebP</span>
                         }
                     </div>
                     <input

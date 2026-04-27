@@ -629,7 +629,7 @@ export function ImagesPage() {
                 <div style={s.modalBackdrop} onClick={closeEngraveModal}>
                     <div style={s.engraveModalBox} onClick={e => e.stopPropagation()}>
                         <div style={s.modalHeader}>
-                            <span style={s.modalTitle}>Engrave — {engraveTarget.name}</span>
+                            <span style={s.modalTitle}>Engrave - {engraveTarget.name}</span>
                             <button style={s.modalClose} onClick={closeEngraveModal}>✕</button>
                         </div>
 

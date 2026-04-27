@@ -305,7 +305,7 @@ export function NotFoundPage() {
 
                     <p style={styles.sub}>
                         The page you're looking for doesn't exist or has been moved.
-                        Don't worry — your watermarks are still safe. Head back home
+                        Don't worry, your watermarks are still safe. Head back home
                         and pick up where you left off.
                     </p>
 

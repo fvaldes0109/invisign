@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../services/authApi';
+import logoImg from '../assets/logo.png';
 
 const c = {
     bg: '#07090F',
@@ -289,8 +290,8 @@ const s = {
 
 const features = [
     { icon: '🔒', text: 'Invisible watermarks, zero visual impact' },
-    { icon: '🛡️', text: 'Survives compression, cropping & edits' },
-    { icon: '🎬', text: 'Works on images and video content' },
+    { icon: '🛡️', text: 'Survives compression, rotation, noise & more' },
+    { icon: '⚔️', text: 'Simulate attacks and verify mark resilience' },
 ];
 
 export function LoginPage() {
@@ -323,7 +324,7 @@ export function LoginPage() {
                 <div style={s.leftGlow2} />
 
                 <Link to="/" style={s.logo}>
-                    <div style={s.logoMark}>W</div>
+                    <img src={logoImg} alt="Invisign" style={{ width: 36, height: 36, objectFit: 'contain' }} />
                     <span style={s.logoText}>Invisign</span>
                 </Link>
 
@@ -334,8 +335,8 @@ export function LoginPage() {
                             <span style={s.leftTitleGrad}>invisible marks</span>
                         </h2>
                         <p style={s.leftSub}>
-                            Embed imperceptible copyright watermarks into images and video.
-                            Prove ownership anywhere, anytime.
+                            Embed imperceptible copyright watermarks into your images.
+                            Prove ownership anywhere, anytime, even after edits or compression.
                         </p>
                     </div>
 
@@ -350,17 +351,17 @@ export function LoginPage() {
 
                     <div style={s.demoCard}>
                         <div style={s.demoCardRow}>
-                            <span style={s.demoCardLabel}>Payload</span>
-                            <span style={s.demoCardVal(c.primaryLight)}>owner:usr_9f3a</span>
+                            <span style={s.demoCardLabel}>Visible change</span>
+                            <span style={s.demoCardVal(c.primaryLight)}>None, imperceptible to the eye</span>
                         </div>
                         <div style={s.demoCardRow}>
-                            <span style={s.demoCardLabel}>Imperceptibility</span>
-                            <span style={s.demoCardVal('#10B981')}>PSNR 48.3 dB</span>
+                            <span style={s.demoCardLabel}>Image quality</span>
+                            <span style={s.demoCardVal('#10B981')}>Preserved</span>
                         </div>
                         <div>
                             <div style={{ ...s.demoCardRow, marginBottom: '0.4rem' }}>
-                                <span style={s.demoCardLabel}>Robustness</span>
-                                <span style={s.demoCardVal(c.accent)}>94 / 100</span>
+                                <span style={s.demoCardLabel}>Recovery confidence</span>
+                                <span style={s.demoCardVal(c.accent)}>96%</span>
                             </div>
                             <div style={s.progressBar}>
                                 <div style={s.progressFill} />

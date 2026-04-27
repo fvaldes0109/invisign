@@ -1,5 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { logout } from '../services/authApi';
+import logoImg from '../assets/logo.png';
 
 const c = {
     primary: '#6366F1',
@@ -58,25 +59,13 @@ export function DashboardLayout() {
                         flexShrink: 0,
                     }}
                 >
-                    <div style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 7,
-                        background: `linear-gradient(135deg, ${c.primary}, ${c.accent})`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontWeight: 800,
-                        fontSize: '0.8rem',
-                        color: '#fff',
-                        flexShrink: 0,
-                    }}>W</div>
+                    <img src={logoImg} alt="Invisign" style={{ width: 28, height: 28, objectFit: 'contain', flexShrink: 0 }} />
                     <span style={{
                         fontSize: '0.95rem',
                         fontWeight: 700,
                         color: c.text,
                         letterSpacing: '-0.02em',
-                    }}>WaterMark</span>
+                    }}>Invisign</span>
                 </a>
 
                 {/* Nav links */}

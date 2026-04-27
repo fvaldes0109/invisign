@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import heroImg from '../assets/hero.webp';
+import logoImg from '../assets/logo.png';
 import usecasePhotoImg from '../assets/usecase-photo.webp';
 import usecaseEcomImg from '../assets/usecase-ecom.webp';
 import usecasePressImg from '../assets/usecase-press.webp';
@@ -668,12 +669,14 @@ const styles = {
 } satisfies StyleMap;
 
 const attacks = [
-    { label: 'JPEG compression', pass: true },
-    { label: 'Rotation & flipping', pass: true },
-    { label: 'Gaussian noise', pass: true },
-    { label: 'Brightness & exposure', pass: true },
-    { label: 'Blur', pass: true },
-    { label: 'Pixelation', pass: true },
+    { label: 'Rotate',            pass: true },
+    { label: 'Mirror',            pass: true },
+    { label: 'Gaussian Noise',    pass: true },
+    { label: 'Brightness',        pass: true },
+    { label: 'JPEG Compression',  pass: true },
+    { label: 'Exposition',        pass: true },
+    { label: 'Blur',              pass: true },
+    { label: 'Pixelate',          pass: true },
 ];
 
 const features = [
@@ -681,48 +684,48 @@ const features = [
         icon: '🔒',
         color: colors.primary,
         title: 'Completely Invisible',
-        desc: 'The watermark is hidden inside the image at a level the human eye cannot detect. Your photo looks exactly the same — before and after.',
+        desc: 'The watermark is hidden inside the image at a level the human eye cannot detect. Your photo looks exactly the same, before and after.',
     },
     {
         icon: '🛡️',
         color: colors.accent,
         title: 'Survives Real-world Edits',
-        desc: 'Compression, rotation, noise, blur, brightness changes — the mark holds up. Even a degraded or re-exported copy can still be verified.',
+        desc: 'Compression, rotation, noise, blur, brightness changes, the mark holds up. Even a degraded or re-exported copy can still be verified.',
     },
     {
         icon: '⚡',
         color: colors.warning,
         title: 'Fast Embedding & Extraction',
-        desc: 'Embed a watermark in seconds and recover it just as quickly. No waiting — results are instant whether you\'re protecting one photo or many.',
+        desc: 'Embed a watermark in seconds and recover it just as quickly. No waiting. Results are instant whether you\'re protecting one photo or many.',
     },
     {
         icon: '🖼️',
         color: '#A855F7',
         title: 'Your Logo as the Mark',
-        desc: 'The watermark is an image — your logo, signature, or any square PNG. Extraction gives you back a visible reconstruction you can verify at a glance.',
+        desc: 'The watermark is an image, your logo, signature, or any square PNG. Extraction gives you back a visible reconstruction you can verify at a glance.',
     },
     {
-        icon: '📊',
+        icon: '⚔️',
         color: colors.success,
-        title: 'Recovery Confidence Score',
-        desc: 'Every extraction produces a similarity score from 0 to 1 telling you how clearly the mark was recovered — so you always know how reliable the result is.',
+        title: 'Attack Simulation',
+        desc: 'Put your watermarked images to the test. Apply JPEG compression, rotation, noise, blur, and more. Then verify the mark still holds up after each transformation.',
     },
     {
         icon: '🌐',
         color: '#EC4899',
         title: 'Full Web Platform',
-        desc: 'Dashboard, user accounts, image library, attack simulation, and extraction — all in one place, accessible from any browser.',
+        desc: 'Dashboard, user accounts, image library, attack simulation, and extraction, all in one place, accessible from any browser.',
     },
 ];
 
 const steps = [
     {
-        title: 'Upload your image',
-        desc: 'Upload the photo you want to protect. JPEG, PNG, and WebP are all supported.',
+        title: 'Choose a watermark',
+        desc: 'Pick a square PNG, your logo, signature, or any symbol. This becomes the invisible mark hidden inside your photo.',
     },
     {
-        title: 'Choose a watermark',
-        desc: 'Pick a square PNG — your logo, signature, or any symbol. This becomes the invisible mark hidden inside your photo.',
+        title: 'Upload your image',
+        desc: 'Upload the photo you want to protect. JPEG, PNG, and WebP are all supported.',
     },
     {
         title: 'Embed',
@@ -797,7 +800,7 @@ export function MainPage() {
             {/* ── Navbar ── */}
             <nav style={styles.nav}>
                 <Link to="/" style={styles.navLogo}>
-                    <div style={styles.navLogoMark}>W</div>
+                    <img src={logoImg} alt="Invisign" style={{ width: 34, height: 34, objectFit: 'contain' }} />
                     <span style={styles.navLogoText}>Invisign</span>
                 </Link>
 
@@ -830,7 +833,7 @@ export function MainPage() {
                     <p style={{ ...styles.heroSub, animation: 'fadeInUp 0.7s 0.2s ease both' }}>
                         Hide an invisible ownership mark inside any image. Your photo looks
                         completely untouched, but the mark can be recovered and verified at any
-                        time — even after compression, edits, or quality loss.
+                        time, even after compression, edits, or quality loss.
                     </p>
 
                     <div style={{ ...styles.heroActions, animation: 'fadeInUp 0.7s 0.32s ease both' }}>
@@ -844,7 +847,7 @@ export function MainPage() {
                             <span style={styles.heroStatLabel}>Visually identical</span>
                         </div>
                         <div style={styles.heroStat}>
-                            <span style={styles.heroStatValue}>6</span>
+                            <span style={styles.heroStatValue}>8+</span>
                             <span style={styles.heroStatLabel}>Attack types survived</span>
                         </div>
                         <div style={styles.heroStat}>
@@ -878,11 +881,11 @@ export function MainPage() {
                         <div style={styles.heroCardBody}>
                             <div style={styles.heroCardRow}>
                                 <span style={styles.heroCardLabel}>Visible change</span>
-                                <span style={styles.heroCardVal(colors.primaryLight)}>None — imperceptible to the eye</span>
+                                <span style={styles.heroCardVal(colors.primaryLight)}>None - imperceptible to the eye</span>
                             </div>
                             <div style={styles.heroCardRow}>
                                 <span style={styles.heroCardLabel}>Image quality</span>
-                                <span style={styles.heroCardVal(colors.success)}>Preserved · PSNR 48.3 dB</span>
+                                <span style={styles.heroCardVal(colors.success)}>Preserved</span>
                             </div>
                             <div>
                                 <div style={{ ...styles.heroCardRow, marginBottom: '0.4rem' }}>
@@ -908,7 +911,7 @@ export function MainPage() {
                     <h2 style={styles.sectionTitle}>Built for invisible copyright protection</h2>
                     <p style={styles.sectionSub}>
                         From embedding your first mark to simulating attacks and verifying
-                        ownership — everything is in one place.
+                        ownership, everything is in one place.
                     </p>
 
                     <div ref={featuresRef} style={styles.featureGrid}>
@@ -941,7 +944,7 @@ export function MainPage() {
                     <div style={styles.sectionLabel}>Simple process</div>
                     <h2 style={styles.sectionTitle}>How it works</h2>
                     <p style={styles.sectionSub}>
-                        Four steps from upload to verified ownership — the algorithm handles
+                        Four steps from upload to verified ownership, the algorithm handles
                         all the frequency-domain maths automatically.
                     </p>
 
@@ -1060,7 +1063,7 @@ export function MainPage() {
             <div style={styles.resistSection}>
                 <div style={styles.resistInner}>
                     <div style={styles.sectionLabel}>Robustness</div>
-                    <h2 style={styles.sectionTitle}>Tested against six real-world attacks</h2>
+                    <h2 style={styles.sectionTitle}>Tested against eight real-world attacks</h2>
 
                     <div style={styles.resistGrid}>
                         {/* Attack list */}
@@ -1097,7 +1100,7 @@ export function MainPage() {
                                 {
                                     icon: '🧮',
                                     title: 'Hidden in the frequency domain',
-                                    desc: 'The mark is embedded in how pixel intensities vary across the image — not in the pixels themselves. Changes at this level are invisible to the eye but survive most edits.',
+                                    desc: 'The mark is embedded in how pixel intensities vary across the image, not in the pixels themselves. Changes at this level are invisible to the eye but survive most edits.',
                                 },
                                 {
                                     icon: '🔢',
@@ -1146,7 +1149,7 @@ export function MainPage() {
                     </h2>
                     <p style={styles.ctaSub}>
                         Create an account, upload an image and a watermark, and see it
-                        in action — embedding, attack simulation, and ownership verification,
+                        in action: embedding, attack simulation, and ownership verification,
                         all from your browser.
                     </p>
                     <div style={styles.ctaActions}>
@@ -1159,10 +1162,7 @@ export function MainPage() {
             {/* ── Footer ── */}
             <footer>
                 <div style={styles.footer}>
-                    <span>© 2026 Invisign — Capstone project</span>
-                    <span style={{ color: colors.textDim }}>
-                        Invisible watermarking · SVD + Walsh-Hadamard
-                    </span>
+                    <span>© 2026 Invisign</span>
                 </div>
             </footer>
         </div>
