@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../services/authApi';
+import logoImg from '../assets/logo.png';
 
 const c = {
     bg: '#07090F',
@@ -339,7 +340,7 @@ export function RegisterPage() {
                 <div style={s.leftGlow2} />
 
                 <Link to="/" style={s.logo}>
-                    <div style={s.logoMark}>W</div>
+                    <img src={logoImg} alt="Invisign" style={{ width: 36, height: 36, objectFit: 'contain' }} />
                     <span style={s.logoText}>Invisign</span>
                 </Link>
 
