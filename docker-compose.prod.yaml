@@ -55,6 +55,7 @@ services:
       context: ./react-front
       dockerfile: Dockerfile.prod
       args:
+        VITE_APP_URL: ${VITE_APP_URL}
         VITE_BACKEND_HOST: ${VITE_BACKEND_HOST}
         VITE_BACKEND_PORT: ${VITE_BACKEND_PORT}
         VITE_WATERMARK_SERVICE_HOST: ${VITE_WATERMARK_SERVICE_HOST}
