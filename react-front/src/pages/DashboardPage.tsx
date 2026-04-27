@@ -4,6 +4,7 @@ import { fetchWatermarkCount, fetchWatermarks } from '../services/watermarkApi';
 import { fetchImageCount, fetchImages } from '../services/imageApi';
 import { fetchEngravings } from '../services/engravingApi';
 import { fetchExtractionCount } from '../services/extractionApi';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     bg: '#07090F',
@@ -191,6 +192,7 @@ function ThumbStrip({ items }: ThumbStripProps) {
 }
 
 export function DashboardPage() {
+    const { isMobile, isTablet } = useBreakpoint();
     const [watermarkCount, setWatermarkCount] = useState<number | null>(null);
     const [imageCount, setImageCount] = useState<number | null>(null);
     const [engravingCount, setEngravingCount]   = useState<number | null>(null);
@@ -232,14 +234,14 @@ export function DashboardPage() {
 
     return (
         <div style={s.page}>
-            <main style={s.main}>
+            <main style={{ ...s.main, padding: isMobile ? '1.25rem' : isTablet ? '1.75rem' : '2.5rem' }}>
                 <div style={s.pageHeader}>
                     <div style={s.pageLabel}>Overview</div>
                     <h1 style={s.pageTitle}>Dashboard</h1>
                     <p style={s.pageSub}>Manage your watermarks, protect new images, and verify ownership.</p>
                 </div>
 
-                <div style={s.statsRow}>
+                <div style={{ ...s.statsRow, gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)' }}>
                     {stats.map(st => (
                         <div key={st.label} style={s.statCard}>
                             <span style={s.statLabel}>{st.label}</span>
@@ -249,7 +251,7 @@ export function DashboardPage() {
                     ))}
                 </div>
 
-                <div style={s.cardsGrid}>
+                <div style={{ ...s.cardsGrid, gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)' }}>
                     <Link to="/dashboard/watermarks" style={s.card}>
                         <div style={s.cardAccentBar(`linear-gradient(90deg, ${c.primary}, ${c.primaryLight})`)} />
                         <div style={s.cardBody}>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../services/authApi';
 import logoImg from '../assets/logo.png';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     bg: '#07090F',
@@ -296,6 +297,7 @@ const features = [
 
 export function LoginPage() {
     const navigate = useNavigate();
+    const { isMobile } = useBreakpoint();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -317,9 +319,9 @@ export function LoginPage() {
     }
 
     return (
-        <div style={s.page}>
+        <div style={{ ...s.page, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
             {/* ── Left branding panel ── */}
-            <div style={s.left}>
+            <div style={{ ...s.left, display: isMobile ? 'none' : 'flex' }}>
                 <div style={s.leftGlow} />
                 <div style={s.leftGlow2} />
 
@@ -372,8 +374,14 @@ export function LoginPage() {
             </div>
 
             {/* ── Right form panel ── */}
-            <div style={s.right}>
+            <div style={{ ...s.right, padding: isMobile ? '2rem 1.5rem' : '3rem 4rem' }}>
                 <div style={s.formWrap}>
+                    {isMobile && (
+                        <Link to="/" style={{ ...s.logo, marginBottom: '2rem' }}>
+                            <img src={logoImg} alt="Invisign" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                            <span style={s.logoText}>Invisign</span>
+                        </Link>
+                    )}
                     <div style={s.formHeader}>
                         <div style={s.formBadge}>Welcome back</div>
                         <h1 style={s.formTitle}>Sign in</h1>

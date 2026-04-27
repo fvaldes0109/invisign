@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { register } from '../services/authApi';
 import logoImg from '../assets/logo.png';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     bg: '#07090F',
@@ -310,6 +311,7 @@ const steps = [
 
 export function RegisterPage() {
     const navigate = useNavigate();
+    const { isMobile } = useBreakpoint();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -333,9 +335,9 @@ export function RegisterPage() {
     }
 
     return (
-        <div style={s.page}>
+        <div style={{ ...s.page, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
             {/* ── Left branding panel ── */}
-            <div style={s.left}>
+            <div style={{ ...s.left, display: isMobile ? 'none' : 'flex' }}>
                 <div style={s.leftGlow} />
                 <div style={s.leftGlow2} />
 
@@ -375,8 +377,14 @@ export function RegisterPage() {
             </div>
 
             {/* ── Right form panel ── */}
-            <div style={s.right}>
+            <div style={{ ...s.right, padding: isMobile ? '2rem 1.5rem' : '3rem 4rem' }}>
                 <div style={s.formWrap}>
+                    {isMobile && (
+                        <Link to="/" style={{ ...s.logo, marginBottom: '2rem' }}>
+                            <img src={logoImg} alt="Invisign" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                            <span style={s.logoText}>Invisign</span>
+                        </Link>
+                    )}
                     <div style={s.formHeader}>
                         <div style={s.formBadge}>Get started free</div>
                         <h1 style={s.formTitle}>Create account</h1>
@@ -412,7 +420,7 @@ export function RegisterPage() {
                             />
                         </div>
 
-                        <div style={s.formRow}>
+                        <div style={{ ...s.formRow, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
                             <div style={s.formGroup}>
                                 <label htmlFor="password" style={s.label}>Password</label>
                                 <input

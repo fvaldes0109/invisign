@@ -5,6 +5,7 @@ import logoImg from '../assets/logo.png';
 import usecasePhotoImg from '../assets/usecase-photo.webp';
 import usecaseEcomImg from '../assets/usecase-ecom.webp';
 import usecasePressImg from '../assets/usecase-press.webp';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const colors = {
     bg: '#07090F',
@@ -754,8 +755,10 @@ function useInView(threshold = 0.1) {
 }
 
 export function MainPage() {
+    const { isMobile, isTablet } = useBreakpoint();
     const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
     const [hoveredAttack, setHoveredAttack] = useState<number | null>(null);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const { ref: featuresRef, inView: featuresInView } = useInView();
     const { ref: stepsRef, inView: stepsInView } = useInView();
@@ -804,20 +807,87 @@ export function MainPage() {
                     <span style={styles.navLogoText}>Invisign</span>
                 </Link>
 
-                <div style={styles.navLinks}>
-                    <a href="#features" style={styles.navLink}>Features</a>
-                    <a href="#how-it-works" style={styles.navLink}>How it works</a>
-                    <a href="#use-cases" style={styles.navLink}>Use cases</a>
-                </div>
+                {!isMobile && (
+                    <div style={styles.navLinks}>
+                        <a href="#features" style={styles.navLink}>Features</a>
+                        <a href="#how-it-works" style={styles.navLink}>How it works</a>
+                        <a href="#use-cases" style={styles.navLink}>Use cases</a>
+                    </div>
+                )}
 
-                <div style={styles.navCta}>
-                    <Link to="/login" style={styles.btnOutline}>Log in</Link>
-                    <Link to="/register" style={styles.btnPrimary}>Get started</Link>
-                </div>
+                {!isMobile ? (
+                    <div style={styles.navCta}>
+                        <Link to="/login" style={styles.btnOutline}>Log in</Link>
+                        <Link to="/register" style={styles.btnPrimary}>Get started</Link>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: 'auto' }}>
+                        <Link to="/register" style={{ ...styles.btnPrimary, padding: '0.4rem 0.9rem', fontSize: '0.8rem' }}>Get started</Link>
+                        <button
+                            onClick={() => setMobileMenuOpen(o => !o)}
+                            style={{
+                                padding: '0.4rem 0.6rem',
+                                borderRadius: 8,
+                                border: `1px solid ${colors.border}`,
+                                background: 'transparent',
+                                color: colors.textMuted,
+                                fontSize: '1.1rem',
+                                cursor: 'pointer',
+                                lineHeight: 1,
+                            }}
+                            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+                        >
+                            {mobileMenuOpen ? '✕' : '☰'}
+                        </button>
+                    </div>
+                )}
             </nav>
 
+            {/* Mobile nav dropdown */}
+            {isMobile && mobileMenuOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 61,
+                    left: 0,
+                    right: 0,
+                    zIndex: 99,
+                    background: 'rgba(7,9,15,0.97)',
+                    backdropFilter: 'blur(12px)',
+                    borderBottom: `1px solid ${colors.border}`,
+                    padding: '1rem 6%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+                }}>
+                    {[
+                        { href: '#features', label: 'Features' },
+                        { href: '#how-it-works', label: 'How it works' },
+                        { href: '#use-cases', label: 'Use cases' },
+                    ].map(item => (
+                        <a
+                            key={item.href}
+                            href={item.href}
+                            style={{ ...styles.navLink, padding: '0.75rem 0', fontSize: '0.95rem', display: 'block' }}
+                            onClick={() => setMobileMenuOpen(false)}
+                        >
+                            {item.label}
+                        </a>
+                    ))}
+                    <div style={{ height: 1, background: colors.border, margin: '0.25rem 0' }} />
+                    <Link to="/login" style={{ ...styles.btnOutline, display: 'block', textAlign: 'center', padding: '0.75rem' }} onClick={() => setMobileMenuOpen(false)}>
+                        Log in
+                    </Link>
+                </div>
+            )}
+
             {/* ── Hero ── */}
-            <div style={styles.hero}>
+            <div style={{
+                ...styles.hero,
+                gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+                padding: isMobile ? '3rem 5% 2.5rem' : isTablet ? '4rem 6% 3.5rem' : '6rem 6% 5rem',
+                gap: isMobile ? '2rem' : '4rem',
+            }}>
                 {/* Left copy — staggered fade-in */}
                 <div>
                     <div style={{ ...styles.heroBadge, animation: 'fadeInUp 0.6s ease both' }}>
@@ -857,8 +927,8 @@ export function MainPage() {
                     </div>
                 </div>
 
-                {/* Right visual — floating card */}
-                <div style={{ ...styles.heroVisual, animation: 'fadeInUp 0.8s 0.25s ease both' }}>
+                {/* Right visual — floating card (hidden on mobile) */}
+                {!isMobile && <div style={{ ...styles.heroVisual, animation: 'fadeInUp 0.8s 0.25s ease both' }}>
                     <div style={{ ...styles.heroCard, animation: 'float 5s ease-in-out infinite' }}>
                         {/* Fake window bar */}
                         <div style={styles.heroCardBar}>
@@ -901,12 +971,12 @@ export function MainPage() {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>}
             </div>
 
             {/* ── Features ── */}
             <div id="features" style={{ background: colors.surface, borderTop: `1px solid ${colors.border}`, borderBottom: `1px solid ${colors.border}` }}>
-                <div style={styles.section}>
+                <div style={{ ...styles.section, padding: isMobile ? '3rem 5%' : '6rem 6%' }}>
                     <div style={styles.sectionLabel}>Everything you need</div>
                     <h2 style={styles.sectionTitle}>Built for invisible copyright protection</h2>
                     <p style={styles.sectionSub}>
@@ -939,7 +1009,7 @@ export function MainPage() {
             </div>
 
             {/* ── How it works ── */}
-            <div id="how-it-works" style={styles.howSection}>
+            <div id="how-it-works" style={{ ...styles.howSection, padding: isMobile ? '3rem 5%' : '6rem 6%' }}>
                 <div style={styles.howInner}>
                     <div style={styles.sectionLabel}>Simple process</div>
                     <h2 style={styles.sectionTitle}>How it works</h2>
@@ -969,7 +1039,7 @@ export function MainPage() {
 
             {/* ── Use cases ── */}
             <div id="use-cases" style={{ background: colors.bg }}>
-                <div style={styles.section}>
+                <div style={{ ...styles.section, padding: isMobile ? '3rem 5%' : '6rem 6%' }}>
                     <div style={styles.sectionLabel}>Use cases</div>
                     <h2 style={styles.sectionTitle}>Protecting your images</h2>
                     <p style={styles.sectionSub}>
@@ -982,13 +1052,15 @@ export function MainPage() {
                         {/* Photography — image left */}
                         <div style={{
                             ...styles.useCaseRow(colors.primary),
+                            flexDirection: isMobile ? 'column' : 'row',
+                            minHeight: isMobile ? 'auto' : 380,
                             opacity: useCasesInView ? undefined : 0,
                             animation: useCasesInView ? 'slideInLeft 0.65s ease both' : undefined,
                         }}>
-                            <div style={styles.useCaseImgPane}>
+                            <div style={{ ...styles.useCaseImgPane, flex: isMobile ? 'none' : '0 0 55%', height: isMobile ? 200 : undefined }}>
                                 <img src={usecasePhotoImg} alt="Photography use case" style={styles.useCaseImg} />
                             </div>
-                            <div style={styles.useCaseTextPane}>
+                            <div style={{ ...styles.useCaseTextPane, padding: isMobile ? '1.5rem' : '3rem' }}>
                                 <div style={styles.useCaseTitle}>Photography & Stock Images</div>
                                 <div style={styles.useCaseDesc}>
                                     Photographers and stock agencies can protect every file in their
@@ -1007,14 +1079,15 @@ export function MainPage() {
                         {/* E-commerce — image right */}
                         <div style={{
                             ...styles.useCaseRow(colors.warning),
-                            flexDirection: 'row-reverse',
+                            flexDirection: isMobile ? 'column' : 'row-reverse',
+                            minHeight: isMobile ? 'auto' : 380,
                             opacity: useCasesInView ? undefined : 0,
                             animation: useCasesInView ? 'slideInRight 0.65s 0.12s ease both' : undefined,
                         }}>
-                            <div style={styles.useCaseImgPane}>
+                            <div style={{ ...styles.useCaseImgPane, flex: isMobile ? 'none' : '0 0 55%', height: isMobile ? 200 : undefined }}>
                                 <img src={usecaseEcomImg} alt="E-commerce use case" style={styles.useCaseImg} />
                             </div>
-                            <div style={styles.useCaseTextPane}>
+                            <div style={{ ...styles.useCaseTextPane, padding: isMobile ? '1.5rem' : '3rem' }}>
                                 <div style={styles.useCaseTitle}>E-commerce & Product Photos</div>
                                 <div style={styles.useCaseDesc}>
                                     Retailers and brands can invisibly mark every product image
@@ -1033,13 +1106,15 @@ export function MainPage() {
                         {/* Press — image left */}
                         <div style={{
                             ...styles.useCaseRow('#A855F7'),
+                            flexDirection: isMobile ? 'column' : 'row',
+                            minHeight: isMobile ? 'auto' : 380,
                             opacity: useCasesInView ? undefined : 0,
                             animation: useCasesInView ? 'slideInLeft 0.65s 0.24s ease both' : undefined,
                         }}>
-                            <div style={styles.useCaseImgPane}>
+                            <div style={{ ...styles.useCaseImgPane, flex: isMobile ? 'none' : '0 0 55%', height: isMobile ? 200 : undefined }}>
                                 <img src={usecasePressImg} alt="News & press use case" style={styles.useCaseImg} />
                             </div>
-                            <div style={styles.useCaseTextPane}>
+                            <div style={{ ...styles.useCaseTextPane, padding: isMobile ? '1.5rem' : '3rem' }}>
                                 <div style={styles.useCaseTitle}>News & Press Media</div>
                                 <div style={styles.useCaseDesc}>
                                     Photojournalists and agencies can sign every image at capture
@@ -1060,12 +1135,12 @@ export function MainPage() {
             </div>
 
             {/* ── Attack resistance ── */}
-            <div style={styles.resistSection}>
+            <div style={{ ...styles.resistSection, padding: isMobile ? '3rem 5%' : '6rem 6%' }}>
                 <div style={styles.resistInner}>
                     <div style={styles.sectionLabel}>Robustness</div>
                     <h2 style={styles.sectionTitle}>Tested against eight real-world attacks</h2>
 
-                    <div style={styles.resistGrid}>
+                    <div style={{ ...styles.resistGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '2rem' : '4rem' }}>
                         {/* Attack list */}
                         <div ref={attacksRef} style={styles.attackList}>
                             {attacks.map((a, i) => (
@@ -1134,7 +1209,7 @@ export function MainPage() {
             </div>
 
             {/* ── CTA Banner ── */}
-            <div style={styles.ctaSection}>
+            <div style={{ ...styles.ctaSection, padding: isMobile ? '3rem 5%' : '6rem 6%' }}>
                 <div
                     ref={ctaRef}
                     style={{
@@ -1161,7 +1236,7 @@ export function MainPage() {
 
             {/* ── Footer ── */}
             <footer>
-                <div style={styles.footer}>
+                <div style={{ ...styles.footer, padding: isMobile ? '1.5rem 5%' : '2.5rem 6%' }}>
                     <span>© 2026 Invisign</span>
                 </div>
             </footer>

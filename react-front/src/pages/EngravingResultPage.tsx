@@ -3,6 +3,7 @@ import { deleteEngraving, type Engraving } from '../services/engravingApi';
 import type { UserImage } from '../services/imageApi';
 import type { Watermark } from '../services/watermarkApi';
 import { useEffect, useState } from 'react';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 interface LocationState {
     engraving: Engraving;
@@ -178,6 +179,7 @@ const s: Record<string, React.CSSProperties> = {
 export function EngravingResultPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { isMobile, isTablet } = useBreakpoint();
     const state = location.state as LocationState | null;
     const [deleting, setDeleting] = useState(false);
 
@@ -203,7 +205,7 @@ export function EngravingResultPage() {
 
     return (
         <div style={s.page}>
-            <main style={s.main}>
+            <main style={{ ...s.main, padding: isMobile ? '1.25rem' : isTablet ? '1.75rem' : '2.5rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <span style={s.badge}>Watermark embedded</span>
                     <h1 style={s.pageTitle}>{image.name}</h1>
@@ -250,7 +252,7 @@ export function EngravingResultPage() {
                     </button>
                 </div>
 
-                <div style={s.sourcesRow}>
+                <div style={{ ...s.sourcesRow, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
                     <div style={s.sourceCard}>
                         <img src={image.image_url} alt={image.name} style={s.sourceImg} />
                         <div style={s.sourceInfo}>

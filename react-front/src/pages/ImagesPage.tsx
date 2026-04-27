@@ -8,6 +8,7 @@ import {
 } from '../services/imageApi';
 import { fetchWatermarks, type Watermark } from '../services/watermarkApi';
 import { createEngraving, fetchEngravings } from '../services/engravingApi';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     bg: '#07090F',
@@ -396,6 +397,7 @@ const s: Record<string, React.CSSProperties> = {
 
 export function ImagesPage() {
     const navigate = useNavigate();
+    const { isMobile, isTablet } = useBreakpoint();
 
     const [images, setImages] = useState<UserImage[]>([]);
     const [loading, setLoading] = useState(true);
@@ -506,7 +508,7 @@ export function ImagesPage() {
 
     return (
         <div style={s.page}>
-            <main style={s.main}>
+            <main style={{ ...s.main, padding: isMobile ? '1.25rem' : isTablet ? '1.75rem' : '2.5rem' }}>
                 {/* ── Upload form ── */}
                 <div style={s.uploadCard}>
                     <div style={s.uploadCardTitle}>Upload a new image</div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchExtractions, type ExtractionResult } from '../services/extractionApi';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     bg: '#07090F',
@@ -67,7 +68,7 @@ const s: Record<string, React.CSSProperties> = {
     },
     grid: {
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))',
         gap: '1.25rem',
     },
     card: {
@@ -200,6 +201,7 @@ function scoreColor(pct: number) {
 }
 
 export function ExtractionsPage() {
+    const { isMobile, isTablet } = useBreakpoint();
     const [extractions, setExtractions] = useState<ExtractionResult[]>([]);
     const [loading, setLoading]         = useState(true);
 
@@ -211,7 +213,7 @@ export function ExtractionsPage() {
 
     return (
         <div style={s.page}>
-            <main style={s.main}>
+            <main style={{ ...s.main, padding: isMobile ? '1.25rem' : isTablet ? '1.75rem' : '2.5rem' }}>
                 <div>
                     <div style={s.listHeader}>
                         <span style={s.listTitle}>Results</span>

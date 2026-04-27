@@ -7,6 +7,7 @@ import {
     type Watermark,
 } from '../services/watermarkApi';
 import { fetchEngravings } from '../services/engravingApi';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     bg: '#07090F',
@@ -312,6 +313,7 @@ const s: Record<string, React.CSSProperties> = {
 
 export function WatermarksPage() {
     const navigate = useNavigate();
+    const { isMobile, isTablet } = useBreakpoint();
     const [watermarks, setWatermarks] = useState<Watermark[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
@@ -412,7 +414,7 @@ export function WatermarksPage() {
 
     return (
         <div style={s.page}>
-            <main style={s.main}>
+            <main style={{ ...s.main, padding: isMobile ? '1.25rem' : isTablet ? '1.75rem' : '2.5rem' }}>
                 {/* ── Upload form ── */}
                 <div style={s.uploadCard}>
                     <div style={s.uploadCardTitle}>Upload a new watermark</div>

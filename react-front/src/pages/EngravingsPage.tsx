@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchEngravings, deleteEngraving, type Engraving } from '../services/engravingApi';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     bg: '#07090F',
@@ -223,6 +224,7 @@ const s: Record<string, React.CSSProperties> = {
 
 export function EngravingsPage() {
     const navigate = useNavigate();
+    const { isMobile, isTablet } = useBreakpoint();
     const [searchParams, setSearchParams] = useSearchParams();
     const imageId     = searchParams.get('image_id')     ?? undefined;
     const watermarkId = searchParams.get('watermark_id') ?? undefined;
@@ -271,9 +273,7 @@ export function EngravingsPage() {
 
     return (
         <div style={s.page}>
-
-
-            <main style={s.main}>
+            <main style={{ ...s.main, padding: isMobile ? '1.25rem' : isTablet ? '1.75rem' : '2.5rem' }}>
                 <div style={s.pageHeader}>
                     <h1 style={s.pageTitle}>Engravings</h1>
 

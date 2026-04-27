@@ -9,6 +9,7 @@ import {
     type AttackTestResult,
     type AttackType,
 } from '../services/attackTestApi';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 interface LocationState {
     engraving: Engraving;
@@ -315,6 +316,7 @@ function scoreColor(pct: number) {
 export function AttackTestPage() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { isMobile, isTablet } = useBreakpoint();
     const state = location.state as LocationState | null;
 
     const [selectedAttack, setSelectedAttack] = useState<AttackType>('rotate');
@@ -363,7 +365,7 @@ export function AttackTestPage() {
 
     return (
         <div style={s.page}>
-            <main style={s.main}>
+            <main style={{ ...s.main, padding: isMobile ? '1.25rem' : isTablet ? '1.75rem' : '2.5rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     <span style={s.badge}>Robustness test</span>
                     <h1 style={s.pageTitle}>Attack test</h1>
@@ -439,7 +441,7 @@ export function AttackTestPage() {
                 {result && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         <p style={{ ...s.sectionTitle, margin: 0 }}>Results</p>
-                        <div style={s.resultGrid}>
+                        <div style={{ ...s.resultGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr' }}>
                             <div style={s.resultCard}>
                                 <img src={result.attacked_image_url} alt="Attacked image" style={s.resultImg} />
                                 <div style={s.resultInfo}>

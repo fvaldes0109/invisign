@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { logout } from '../services/authApi';
 import logoImg from '../assets/logo.png';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     primary: '#6366F1',
@@ -23,6 +25,8 @@ const NAV_ITEMS = [
 
 export function DashboardLayout() {
     const navigate = useNavigate();
+    const { isMobile } = useBreakpoint();
+    const [menuOpen, setMenuOpen] = useState(false);
 
     async function handleLogout() {
         try { await logout(); } finally {
@@ -31,22 +35,50 @@ export function DashboardLayout() {
         }
     }
 
+    const headerStyle: React.CSSProperties = {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.25rem',
+        padding: '0 1.25rem',
+        height: 56,
+        borderBottom: `1px solid ${c.border}`,
+        background: 'rgba(7,9,15,0.92)',
+        backdropFilter: 'blur(12px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+    };
+
+    const navLinkStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '0.35rem 0.7rem',
+        borderRadius: 7,
+        textDecoration: 'none',
+        fontSize: '0.82rem',
+        fontWeight: isActive ? 600 : 500,
+        whiteSpace: 'nowrap',
+        color: isActive ? c.primaryLight : c.textMuted,
+        background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent',
+        border: isActive ? '1px solid rgba(99,102,241,0.22)' : '1px solid transparent',
+    });
+
+    const mobileNavLinkStyle = ({ isActive }: { isActive: boolean }): React.CSSProperties => ({
+        display: 'block',
+        padding: '0.75rem 1rem',
+        borderRadius: 10,
+        textDecoration: 'none',
+        fontSize: '0.9rem',
+        fontWeight: isActive ? 700 : 500,
+        color: isActive ? c.primaryLight : c.textMuted,
+        background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent',
+        border: isActive ? `1px solid rgba(99,102,241,0.22)` : '1px solid transparent',
+    });
+
     return (
         <>
-            <header style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.25rem',
-                padding: '0 1.75rem',
-                height: 56,
-                borderBottom: `1px solid ${c.border}`,
-                background: 'rgba(7,9,15,0.92)',
-                backdropFilter: 'blur(12px)',
-                position: 'sticky',
-                top: 0,
-                zIndex: 100,
-                fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-            }}>
+            <header style={headerStyle}>
                 {/* Logo */}
                 <a
                     href="/"
@@ -55,7 +87,7 @@ export function DashboardLayout() {
                         alignItems: 'center',
                         gap: '0.5rem',
                         textDecoration: 'none',
-                        marginRight: '1.25rem',
+                        marginRight: isMobile ? 'auto' : '1.25rem',
                         flexShrink: 0,
                     }}
                 >
@@ -68,53 +100,111 @@ export function DashboardLayout() {
                     }}>Invisign</span>
                 </a>
 
-                {/* Nav links */}
-                <nav style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', flex: 1, minWidth: 0 }}>
+                {/* Desktop nav */}
+                {!isMobile && (
+                    <nav style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', flex: 1, minWidth: 0 }}>
+                        {NAV_ITEMS.map(item => (
+                            <NavLink
+                                key={item.to}
+                                to={item.to}
+                                end={item.end}
+                                style={navLinkStyle}
+                            >
+                                {item.label}
+                            </NavLink>
+                        ))}
+                    </nav>
+                )}
+
+                {/* Desktop log out */}
+                {!isMobile && (
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            marginLeft: '1rem',
+                            padding: '0.38rem 0.85rem',
+                            borderRadius: 8,
+                            border: `1px solid ${c.border}`,
+                            background: 'transparent',
+                            color: c.textMuted,
+                            fontSize: '0.8rem',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            flexShrink: 0,
+                        }}
+                    >
+                        Log out
+                    </button>
+                )}
+
+                {/* Mobile hamburger */}
+                {isMobile && (
+                    <button
+                        onClick={() => setMenuOpen(o => !o)}
+                        style={{
+                            padding: '0.4rem 0.6rem',
+                            borderRadius: 8,
+                            border: `1px solid ${c.border}`,
+                            background: 'transparent',
+                            color: c.textMuted,
+                            fontSize: '1.1rem',
+                            cursor: 'pointer',
+                            lineHeight: 1,
+                        }}
+                        aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+                    >
+                        {menuOpen ? '✕' : '☰'}
+                    </button>
+                )}
+            </header>
+
+            {/* Mobile dropdown menu */}
+            {isMobile && menuOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 56,
+                    left: 0,
+                    right: 0,
+                    zIndex: 99,
+                    background: 'rgba(7,9,15,0.97)',
+                    backdropFilter: 'blur(12px)',
+                    borderBottom: `1px solid ${c.border}`,
+                    padding: '0.75rem 1rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.25rem',
+                    fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+                }}>
                     {NAV_ITEMS.map(item => (
                         <NavLink
                             key={item.to}
                             to={item.to}
                             end={item.end}
-                            style={({ isActive }) => ({
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '0.35rem 0.7rem',
-                                borderRadius: 7,
-                                textDecoration: 'none',
-                                fontSize: '0.82rem',
-                                fontWeight: isActive ? 600 : 500,
-                                whiteSpace: 'nowrap' as const,
-                                color: isActive ? c.primaryLight : c.textMuted,
-                                background: isActive ? 'rgba(99,102,241,0.12)' : 'transparent',
-                                border: isActive
-                                    ? '1px solid rgba(99,102,241,0.22)'
-                                    : '1px solid transparent',
-                            })}
+                            style={mobileNavLinkStyle}
+                            onClick={() => setMenuOpen(false)}
                         >
                             {item.label}
                         </NavLink>
                     ))}
-                </nav>
-
-                {/* Log out */}
-                <button
-                    onClick={handleLogout}
-                    style={{
-                        marginLeft: '1rem',
-                        padding: '0.38rem 0.85rem',
-                        borderRadius: 8,
-                        border: `1px solid ${c.border}`,
-                        background: 'transparent',
-                        color: c.textMuted,
-                        fontSize: '0.8rem',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                    }}
-                >
-                    Log out
-                </button>
-            </header>
+                    <div style={{ height: 1, background: c.border, margin: '0.5rem 0' }} />
+                    <button
+                        onClick={handleLogout}
+                        style={{
+                            padding: '0.75rem 1rem',
+                            borderRadius: 10,
+                            border: `1px solid ${c.border}`,
+                            background: 'transparent',
+                            color: c.textMuted,
+                            fontSize: '0.9rem',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                        }}
+                    >
+                        Log out
+                    </button>
+                </div>
+            )}
 
             <Outlet />
         </>

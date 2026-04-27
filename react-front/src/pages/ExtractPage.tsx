@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { fetchEngravings, type Engraving } from '../services/engravingApi';
 import { runExtraction, type ExtractionResult } from '../services/extractionApi';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 
 const c = {
     bg: '#07090F',
@@ -277,6 +278,7 @@ function scoreBarBg(pct: number) {
 }
 
 export function ExtractPage() {
+    const { isMobile, isTablet } = useBreakpoint();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [engravings, setEngravings]           = useState<Engraving[]>([]);
@@ -312,7 +314,7 @@ export function ExtractPage() {
 
     return (
         <div style={s.page}>
-            <main style={s.main}>
+            <main style={{ ...s.main, padding: isMobile ? '1.25rem' : isTablet ? '1.75rem' : '2.5rem' }}>
                 <div style={s.pageHeader}>
                     <div style={s.pageLabel}>Watermark extraction</div>
                     <h1 style={s.pageTitle}>Extract & verify ownership</h1>
