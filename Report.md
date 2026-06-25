@@ -46,7 +46,7 @@ The remaining USC-SIPI volumes are also available for broader testing: **Aerials
 
 **Watermark images** are not drawn from a dataset: they are square logo images supplied separately (the shipped `mark.png` is a **128×128 solid star**); the system auto-resizes each to the nearest power-of-2 square before embedding.
 
-**Special traits:** this is a curated *test-image suite*, not a labeled/balanced ML dataset, so class imbalance does not apply. It deliberately spans diverse frequency content (e.g. Baboon = high-frequency texture, smooth portraits = low-frequency) and a grayscale/color mix, which is exactly what stresses a frequency-domain watermark. Two caveats: USC-SIPI does **not** own the copyright to most images (status listed as "unknown" for many), and the historically common **Lena** image (`4.2.04`) has been **removed** from the current distribution.
+**Special traits:** this is a curated *test-image suite*, not a labeled/balanced ML dataset, so class imbalance does not apply. It deliberately spans diverse frequency content (e.g. Baboon = high-frequency texture, smooth portraits = low-frequency) and a grayscale/color mix, which stresses the per-block singular-value structure this method operates on. Two caveats: USC-SIPI does **not** own the copyright to most images (status listed as "unknown" for many), and the historically common **Lena** image (`4.2.04`) has been **removed** from the current distribution.
 
 ### Links to datasets
 
@@ -65,19 +65,15 @@ Crucially, recovery is **not** validated by raw NCC. Because extraction reconstr
 
 ## Solutions overview
 
-The method builds directly on block-based transform-domain watermarking that combines the Fast Hadamard Transform with SVD, and is positioned against earlier spatial-domain and adaptive frequency-domain schemes.
+The method builds on block-based singular-value-decomposition (SVD) watermarking, and is positioned against earlier spatial-domain and adaptive frequency-domain schemes.
 
 ### A robust block-based image watermarking scheme using fast Hadamard transform and singular value decomposition
 
-Emad E. Abdallah, A. Ben Hamza, Prabir Bhattacharya, *IEEE 18th International Conference on Pattern Recognition (ICPR'06)*, 2006. The **primary basis** for the embedding/extraction formulas used here (block-wise FHT, then distribute the watermark's singular values over the transformed blocks). https://doi.org/10.1109/ICPR.2006.167
+Emad E. Abdallah, A. Ben Hamza, Prabir Bhattacharya, *IEEE 18th International Conference on Pattern Recognition (ICPR'06)*, 2006. The **primary basis** for the embedding/extraction formulas used here (distributing the watermark's singular values over the image's per-block SVD). https://doi.org/10.1109/ICPR.2006.167
 
 ### Robust digital watermarking techniques for multimedia protection
 
-Emad Eddien Awad Abdallah, PhD thesis, Concordia University, 2009. The second foundational work the methodology is based on; extends the block FHT+SVD scheme to geometric-attack robustness and 3D/video. https://spectrum.library.concordia.ca/976203/
-
-### Watermarking by multiresolution Hadamard transform
-
-S. A. M. Gilani, A. N. Skodras, *European Conf. on Electronic Imaging & the Visual Arts (EVA 2001)*, Florence. Earlier precedent for embedding a logo in the (multiresolution) Hadamard-transform domain, choosing blocks by entropy to preserve fidelity, relevant to the transform-domain lineage this method derives from (its Hadamard step has since been removed; see *Baseline metrics and results*). https://www.ece.upatras.gr/skodras/
+Emad Eddien Awad Abdallah, PhD thesis, Concordia University, 2009. The second foundational work the methodology is based on; extends the block-based SVD scheme to geometric-attack robustness and 3D/video. https://spectrum.library.concordia.ca/976203/
 
 ### An adaptive digital image watermarking technique for copyright protection
 
@@ -126,19 +122,17 @@ Lift over each method's own control, mean over 39 images, at the working strengt
 | Attack class | Best embedder | Reason |
 |---|---|---|
 | Clean fidelity / capacity | additive ≈ LSB | they store the watermark *image* directly; SVD stores ~one scalar per block |
-| Geometry (rotate/mirror) | additive ≈ SVD | both re-synchronise via the dihedral search; LSB cannot |
+| Geometry (rotate/mirror) | additive | additive and SVD both re-synchronise via the dihedral search, so geometry leaves their clean lift intact; LSB has no resync |
 | Global tone (brightness/exposition) | additive ≈ LSB | tone curves rescale singular values multiplicatively/non-linearly, breaking SVD's additive model |
 | **Lossy / diffusive (noise, JPEG, blur, pixelate)** | **SVD** | the largest singular value is each block's low-frequency *energy*, which compression/blur/averaging preserve, and cross-block median pooling averages out the zero-mean corruption that pixel-differencing absorbs directly |
 
 The crucial point is *which* class matters in practice. Real-world redistribution almost always involves **re-compression, resizing and blur**, not pristine copies, which is exactly the regime where SVD is the only one of the three to survive (and exactly the channel a camcorder capture or web re-upload imposes; see *Threat model & use cases*). So the simpler baselines win the *benign* cases, but the SVD representation earns its place on the distortions a leaked image actually undergoes.
 
-> **On the Walsh-Hadamard transform.** The source method applies a Walsh-Hadamard transform to each block before the SVD. A one-time ablation (pipeline run with vs. without it) found the two identical to within uint8 rounding, as theory predicts, since `H/√n` is orthogonal and singular values are invariant under orthogonal transforms (`σᵢ(B′) = σᵢ(B)`), and the scheme reads/writes only singular values. The transform was therefore **removed** from the implementation; "SVD" throughout this report is the shipped, Hadamard-free method.
-
 ### Main model
 
-The deployed solution is a **block-based SVD watermarking scheme**. Both the host image `M` and watermark `W` are processed in grayscale at resolution `m × m` (the implementation also supports colour, per-channel).
+The deployed solution is a **block-based SVD watermarking scheme**. The host image `M` is processed per colour channel (a grayscale image is treated as a single channel); the watermark `W` is reduced to grayscale and is square at resolution `m × m`.
 
-> The source method additionally applies a Walsh-Hadamard transform to each block before the SVD. It has **no measurable effect**, being orthogonal it preserves singular values, and was **removed from the implementation** (see the *On the Walsh-Hadamard transform* note under *Baseline metrics and results*). The steps below are the shipped, Hadamard-free method.
+> **Note on the original paper's Walsh-Hadamard step.** The source method applies a Walsh-Hadamard transform to each block before the SVD; it is disregarded here. `H/√n` is orthogonal, and singular values are invariant under orthogonal transforms, so the transform leaves the block singular values, the only quantity this scheme reads or writes, unchanged; a one-time ablation confirmed identical results (within uint8 rounding) with and without it. The steps below are the shipped, Hadamard-free method.
 
 **Embedding (`mask_image`):**
 1. Split the image into `n × n` blocks (`BLOCK_SIZE = 16`).
@@ -164,7 +158,7 @@ All results are aggregated over the **39 cover images** of the USC-SIPI Miscella
 | *Additive baseline (for scale)* | 48.2 | n/a | 0.9994 | imperceptible |
 | *LSB baseline (for scale)* | 51.0 | ~392 000 | 0.9983 | imperceptible |
 
-**Why robustness is reported as *lift*, not raw NCC.** Extraction rebuilds the mark as `Uᵂ · diag(S) · Vᵀᵂ` from the *original watermark's own* singular vectors, so the output is watermark-shaped regardless of the recovered singular values, and the dihedral search keeps whichever orientation maximizes that resemblance. Consequently **extracting from a completely unmarked cover already yields a mean NCC ≈ 0.49**, a reconstruction floor. Raw NCC is dominated by this floor, so genuine recovery is reported as **lift = NCC(marked) − NCC(unmarked control)**, with the control put through the same attack. The **old default α = 5×10⁻⁵** illustrates the point: it perturbs ~147 000 pixels, but at a magnitude too small to survive uint8 rounding in the singular-value domain, so its lift is **+0.000** on every attack: it embeds nothing *recoverable*.
+**Why robustness is reported as *lift*, not raw NCC.** Extraction rebuilds the mark as `Uᵂ · diag(S) · Vᵀᵂ` from the *original watermark's own* singular vectors, so the output is watermark-shaped regardless of the recovered singular values, and the dihedral search keeps whichever orientation maximizes that resemblance. Consequently **extracting from a completely unmarked cover already yields a mean NCC ≈ 0.49**, a reconstruction floor. Raw NCC is dominated by this floor, so genuine recovery is reported as **lift = NCC(marked) − NCC(unmarked control)**, with the control put through the same attack. The **old default α = 5×10⁻⁵** illustrates the point: it perturbs ~148 000 pixels, but at a magnitude too small to survive uint8 rounding in the singular-value domain, so its lift is **+0.000** on every attack: it embeds nothing *recoverable*.
 
 **Robustness as lift over the zero-embedding control (mean over 39 images).** The control floor is independent of α (no signal embedded), so it is shown once:
 
@@ -183,7 +177,7 @@ All results are aggregated over the **39 cover images** of the USC-SIPI Miscella
 **Reading the results:**
 - **The method genuinely works at an imperceptible strength.** At α = 0.01 (~51 dB, invisible) the watermark recovers with strong lift on clean images (+0.441) and survives the lossy/value attacks that matter: noise +0.321, JPEG +0.356, blur +0.349.
 - **Geometric attacks are essentially free.** Rotation (90°) and mirroring keep the full no-attack lift (+0.441): the dihedral-orientation search inverts these lossless permutations exactly.
-- **The weak spots at α = 0.01 are brightness and exposition** (+0.001 / −0.001). Both rescale the global tone curve, which shifts the block singular values in a way the linear extraction can't undo; they only recover at the strong α = 0.7 (+0.127 / +0.423).
+- **The weak spots at α = 0.01 are brightness and exposition** (+0.002 / −0.003). Both rescale the global tone curve, which shifts the block singular values in a way the linear extraction can't undo; they only recover at the strong α = 0.7 (+0.127 / +0.423).
 - **Stronger embedding is not uniformly better.** Clean recovery actually *peaks* at α = 0.01 (NCC 0.933) and is lower at α = 0.7 (0.870, where the heavy perturbation starts to distort the blocks). α = 0.7 spreads robustness more evenly across *all* attacks, including brightness/exposition/pixelate, but at clearly visible cost (22 dB).
 - **Net.** At a genuinely imperceptible strength the scheme recovers the watermark well and resists geometry, noise, JPEG and blur; its remaining weakness is global tone changes (brightness/exposition), which need a visible embedding strength to survive.
 
@@ -218,4 +212,4 @@ Watermarking here proves that a suspect image derives from a specific marked mas
 - **Collusion**: several recipients averaging their differently-marked copies to wash out the mark; defeating this needs anti-collusion fingerprint codes (e.g. Tardos), which the scheme has none of.
 - **Capacity / separation** for potentially thousands of distinct, attack-survivable marks, which would require carrying a coded serial number rather than a single logo image.
 
-**Verdict.** The SVD core is a legitimate, working watermark at an imperceptible strength (≈ 50 dB), with genuine robustness to geometry, noise, JPEG and blur, and its honest home is **owner-held forensic tracing**, not contested ownership proof. That said, the additive-baseline comparison shows its margin is narrow: a one-line additive overlay matches or beats it on everything *except* the lossy/diffusive attacks (noise, JPEG, blur), so the marginal value of the SVD representation is specifically **robustness to lossy processing**. The Walsh-Hadamard transform was proven redundant (orthogonal-invariance of singular values) and **removed**.
+**Verdict.** The SVD core is a legitimate, working watermark at an imperceptible strength (≈ 50 dB), with genuine robustness to geometry, noise, JPEG and blur, and its honest home is **owner-held forensic tracing**, not contested ownership proof. That said, the additive-baseline comparison shows its margin is narrow: a one-line additive overlay matches or beats it on everything *except* the lossy/diffusive attacks (noise, JPEG, blur), so the marginal value of the SVD representation is specifically **robustness to lossy processing**.

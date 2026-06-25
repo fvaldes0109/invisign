@@ -4,6 +4,8 @@
 
 The idea and explanation of the algorithm is on ./algorithm.pdf
 
+The capstone report is **[Report.md](Report.md)** — problem/relevance, the USC-SIPI dataset, metrics, the experimental analysis (Additive/LSB/SVD baseline comparison, NCC *lift over a zero-embedding control*, imperceptibility), the threat model / use cases, and the rationale for design decisions (e.g. why the Walsh-Hadamard transform was removed and why the default embedding strength is α = 0.01). Read it when reasoning about the method's behaviour, results, or limitations.
+
 Three-service stack orchestrated by `docker-compose.yaml`.
 
 | Service | Port | Role |
@@ -22,6 +24,10 @@ Three-service stack orchestrated by `docker-compose.yaml`.
 ## Keeping documentation in sync
 
 When making changes that affect a subproject's architecture, conventions, or rules, update the corresponding `CLAUDE.md` file in the same commit. This includes (but is not limited to): new layers or patterns, changes to testing rules, modified API contracts, or updated tooling.
+
+## Committing and pushing
+
+Do not run `git commit` or `git push` unless the user explicitly requests it **in that same message**. Approval from an earlier message does not carry forward — treat every commit and every push as needing its own explicit, current instruction.
 
 ## Running locally
 
