@@ -123,7 +123,7 @@ class WatermarkTest extends TestCase
         Storage::fake('public');
 
         $user = User::factory()->create();
-        $file = UploadedFile::fake()->image('photo.jpg', 256, 256);
+        $file = UploadedFile::fake()->image('photo.png', 256, 256);
 
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/watermarks', [
@@ -141,8 +141,8 @@ class WatermarkTest extends TestCase
         ]);
 
         $id = $response->json('data.id');
-        Storage::disk('public')->assertExists("watermarks/{$user->id}/{$id}.jpg");
-        Storage::disk('public')->assertExists("watermarks/{$user->id}/thumbnails/{$id}_thumb.jpg");
+        Storage::disk('public')->assertExists("watermarks/{$user->id}/{$id}.png");
+        Storage::disk('public')->assertExists("watermarks/{$user->id}/thumbnails/{$id}_thumb.png");
     }
 
     public function test_store_returns_422_when_no_image_attached(): void
@@ -173,7 +173,7 @@ class WatermarkTest extends TestCase
         Storage::fake('public');
 
         $user = User::factory()->create();
-        $file = UploadedFile::fake()->image('mark.jpg', 800, 600);
+        $file = UploadedFile::fake()->image('mark.png', 800, 600);
 
         $this->actingAs($user, 'sanctum')
             ->postJson('/api/watermarks', [
@@ -190,7 +190,7 @@ class WatermarkTest extends TestCase
 
         $user = User::factory()->create();
         // 300×300 — nearest power of two is 256 (300-256=44 < 512-300=212)
-        $file = UploadedFile::fake()->image('mark.jpg', 300, 300);
+        $file = UploadedFile::fake()->image('mark.png', 300, 300);
 
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/watermarks', [
@@ -201,7 +201,7 @@ class WatermarkTest extends TestCase
         $response->assertOk();
 
         $id     = $response->json('data.id');
-        $stored = Storage::disk('public')->get("watermarks/{$user->id}/{$id}.jpg");
+        $stored = Storage::disk('public')->get("watermarks/{$user->id}/{$id}.png");
         [$w, $h] = getimagesizefromstring($stored);
 
         $this->assertSame(256, $w);
@@ -213,7 +213,7 @@ class WatermarkTest extends TestCase
         Storage::fake('public');
 
         $user = User::factory()->create();
-        $file = UploadedFile::fake()->image('mark.jpg', 512, 512);
+        $file = UploadedFile::fake()->image('mark.png', 512, 512);
 
         $response = $this->actingAs($user, 'sanctum')
             ->postJson('/api/watermarks', [
@@ -224,7 +224,7 @@ class WatermarkTest extends TestCase
         $response->assertOk();
 
         $id     = $response->json('data.id');
-        $stored = Storage::disk('public')->get("watermarks/{$user->id}/{$id}.jpg");
+        $stored = Storage::disk('public')->get("watermarks/{$user->id}/{$id}.png");
         [$w, $h] = getimagesizefromstring($stored);
 
         $this->assertSame(512, $w);

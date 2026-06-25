@@ -22,7 +22,7 @@ class EngraveImage
     }
 
     /** @throws NotFound */
-    public function execute(string $imageId, string $watermarkId, int $userId, float $alpha = 0.00005): Engraving
+    public function execute(string $imageId, string $watermarkId, int $userId, float $alpha = 0.01): Engraving
     {
         $image     = $this->imageRepository->findByIdForUser($imageId, $userId);
         $watermark = $this->watermarkRepository->findByIdForUser($watermarkId, $userId);

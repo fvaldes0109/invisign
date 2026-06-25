@@ -1,5 +1,9 @@
 # Image Watermark — Capstone Project
 
+## Project explanation
+
+The idea and explanation of the algorithm is on ./algorithm.pdf
+
 Three-service stack orchestrated by `docker-compose.yaml`.
 
 | Service | Port | Role |
@@ -13,7 +17,7 @@ Three-service stack orchestrated by `docker-compose.yaml`.
 
 - **[react-front](react-front/CLAUDE.md)** — User-facing dashboard (upload images/watermarks, trigger engravings/extractions, view results).
 - **[laravel-backend](laravel-backend/CLAUDE.md)** — Manages users, file storage, DB records, and orchestrates calls to the marking module.
-- **[marking-module](marking-module/CLAUDE.md)** — Stateless FastAPI service that embeds/extracts invisible watermarks using SVD + Walsh-Hadamard transforms.
+- **[marking-module](marking-module/CLAUDE.md)** — Stateless FastAPI service that embeds/extracts invisible watermarks using block-wise SVD.
 
 ## Keeping documentation in sync
 

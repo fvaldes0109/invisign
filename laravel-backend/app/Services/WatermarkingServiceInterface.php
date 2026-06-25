@@ -11,7 +11,7 @@ interface WatermarkingServiceInterface
      * @param  string  $watermarkContents Raw bytes of the watermark image.
      * @return string                     Raw bytes of the engraved result image.
      */
-    public function engrave(string $imageContents, string $watermarkContents, float $alpha = 0.00005): string;
+    public function engrave(string $imageContents, string $watermarkContents, float $alpha = 0.01): string;
 
     /**
      * Extract a watermark from a suspected copy.
@@ -22,7 +22,7 @@ interface WatermarkingServiceInterface
      * @param  float   $alpha                 Embedding strength used during engraving.
      * @return ExtractionResult               Extracted watermark bytes + NCC similarity score [0, 1].
      */
-    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents, float $alpha = 0.00005): ExtractionResult;
+    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents, float $alpha = 0.01): ExtractionResult;
 
     /**
      * Apply a named attack transformation to an image.

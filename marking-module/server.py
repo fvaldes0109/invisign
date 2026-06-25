@@ -59,7 +59,7 @@ async def health_check():
 async def engrave_images(
     image: UploadFile = File(...),
     watermark: UploadFile = File(...),
-    alpha: float = Form(0.00005),
+    alpha: float = Form(0.01),
 ):
     image_bytes = await image.read()
     watermark_bytes = await watermark.read()
@@ -80,7 +80,7 @@ async def extract_images(
     marked_image: UploadFile = File(...),
     original_image: UploadFile = File(...),
     watermark: UploadFile = File(...),
-    alpha: float = Form(0.00005),
+    alpha: float = Form(0.01),
 ):
     marked_image_bytes = await marked_image.read()
     original_image_bytes = await original_image.read()

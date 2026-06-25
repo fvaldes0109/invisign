@@ -47,7 +47,7 @@ export async function deleteEngraving(id: string): Promise<void> {
     if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 }
 
-export async function createEngraving(imageId: string, watermarkId: string, alpha: number = 0.00005): Promise<Engraving> {
+export async function createEngraving(imageId: string, watermarkId: string, alpha: number = 0.01): Promise<Engraving> {
     const res = await fetch(`${BACKEND_URL}/api/engravings`, {
         method: 'POST',
         headers: { ...authHeaders(), 'Content-Type': 'application/json' },

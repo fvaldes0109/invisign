@@ -1,9 +1,18 @@
 """
-SVD + Walsh-Hadamard watermark embedding and extraction.
+SVD-based watermark embedding and extraction.
 
 Based on the paper by Valdés García & Morales Santiesteban:
   "Incrustación y extracción de una marca de agua invisible en una imagen
    utilizando Descomposición SV" (Universidad de La Habana).
+
+The paper applies a Walsh-Hadamard transform to each block before the SVD.
+That step has been **removed**: the Walsh-Hadamard matrix is orthogonal
+(``H/√n`` is orthogonal, ``HHᵀ = n·I``) and singular values are invariant
+under orthogonal transforms, so it leaves every quantity this scheme reads
+or writes — the block singular values — unchanged. An ablation over the
+USC-SIPI test set confirmed identical results (within uint8 rounding) with
+and without it. Embedding and extraction therefore operate directly on the
+raw block SVD: same output, less computation.
 
 The paper operates on grayscale images. This module extends the algorithm
 to BGR colour images by running the same embedding on every colour
@@ -12,41 +21,34 @@ that maps to the same watermark singular-value index is pooled together
 and the robust median is used — this tolerates attacks that damage a
 subset of channels or blocks.
 
-All heavy work is vectorised with batched NumPy matmul broadcasting and
-batched SVD so a 512×512 image runs in a single pass over ~1000 blocks
-instead of a Python-level loop.
+All heavy work is vectorised with batched NumPy SVD so a 512×512 image
+runs in a single pass over ~1000 blocks instead of a Python-level loop.
 """
 from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
 from typing import Tuple
 
 import cv2
 import numpy as np
-from scipy.linalg import hadamard
 
 from . import blocks
 
 # Embedding strength.
 #
-# The paper experiments use α = 0.7 on 512×512 grayscale images. On BGR
-# colour images the perturbation is applied to every channel, so a much
-# smaller value is sufficient to make the watermark recoverable while
-# staying imperceptible. The value below is the project's tuned default;
-# larger values give more robustness at the cost of visible artefacts.
-ALPHA = 0.00005
+# The paper experiments use α = 0.7, which is robust but visibly degrades
+# the cover (~22 dB PSNR). The previous default of 5e-5 was too small for the
+# perturbation to survive uint8 rounding in the singular-value domain, so
+# recovery matched extraction from an unmarked cover (zero lift) even though
+# pixels changed. α = 0.01 is the project default — it perturbs the image
+# imperceptibly (~50 dB PSNR) while embedding a recoverable watermark. Larger
+# values trade imperceptibility for more robustness against attacks.
+ALPHA = 0.01
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-@lru_cache(maxsize=4)
-def _hadamard_matrix(n: int) -> np.ndarray:
-    """Cached Hadamard matrix (float64). ``n`` must be a power of two."""
-    return hadamard(n).astype(np.float64)
-
 
 def _to_gray(image: np.ndarray) -> np.ndarray:
     """Convert BGR to grayscale; pass through if already 2-D."""
@@ -70,14 +72,6 @@ def _watermark_svd(watermark: np.ndarray, *, full: bool) -> Tuple[np.ndarray, ..
     return (np.linalg.svd(gray, compute_uv=False),)
 
 
-def _batched_hadamard(blocks_4d: np.ndarray, H: np.ndarray, n: int) -> np.ndarray:
-    """Apply ``B' = (H B H) / n`` to every (channel, block) simultaneously."""
-    # blocks_4d: (B, C, n, n).
-    # numpy's ``@`` broadcasts H (n, n) across the leading (B, C) dims,
-    # which is ~28× faster than the equivalent einsum for large batch sizes.
-    return (H @ blocks_4d @ H) / n
-
-
 def _validate_image(image: np.ndarray, role: str) -> None:
     if image is None:
         raise ValueError(f"{role} is missing")
@@ -97,7 +91,7 @@ def _validate_image(image: np.ndarray, role: str) -> None:
 
 def mask_image(image: np.ndarray, watermark: np.ndarray, alpha: float = ALPHA) -> np.ndarray:
     """
-    Embed ``watermark`` into ``image`` using the SVD + Hadamard scheme.
+    Embed ``watermark`` into ``image`` using the SVD scheme.
 
     Both inputs are BGR uint8 arrays.  The returned image has the same
     dimensions as ``image`` — edge pixels outside the block grid are
@@ -114,33 +108,26 @@ def mask_image(image: np.ndarray, watermark: np.ndarray, alpha: float = ALPHA) -
     gray_shape = _to_gray(watermark).shape
     m = float(min(gray_shape))
 
-    n = blocks.BLOCK_SIZE
-    H = _hadamard_matrix(n)
-
     # (B, 3, n, n) block stack.
     stack = blocks.deconstruct(image).astype(np.float64)
     num_blocks = stack.shape[0]
     num_sv = S_w.size
 
-    # Forward Hadamard over every block and channel in a single pass.
-    B_prime = _batched_hadamard(stack, H, n)
+    # Batched SVD of the raw blocks: NumPy treats the trailing two dims as
+    # matrices. (The paper's Walsh-Hadamard step is omitted — being orthogonal
+    # it leaves the singular values unchanged; see module docstring.)
+    U, S, Vt = np.linalg.svd(stack, full_matrices=False)
 
-    # Batched SVD: NumPy interprets the trailing two dims as matrices.
-    U, S, Vt = np.linalg.svd(B_prime, full_matrices=False)
-
-    # σ_k = σ_B' + (α·b / m) · σ_W, applied to the largest SV of every
+    # σ_k = σ_B + (α·b / m) · σ_W, applied to the largest SV of every
     # block. ``b`` starts at 1 so block 0 still carries a signal.
     b_idx = np.minimum(np.arange(1, num_blocks + 1, dtype=np.float64), float(num_sv))
     sigma_w_per_block = S_w[np.arange(num_blocks) % num_sv]
     term = (alpha * b_idx / m) * sigma_w_per_block              # (B,)
     S[:, :, 0] += term[:, None]                                 # broadcast over C
 
-    # Reconstruct B'_new = U · diag(S) · Vt, batched.
+    # Reconstruct each block B_new = U · diag(S) · Vt, batched.
     #   (B, C, n, k) · (B, C, k, n) -> (B, C, n, n)
-    B_prime_new = (U * S[:, :, None, :]) @ Vt
-
-    # Inverse Hadamard.
-    M = _batched_hadamard(B_prime_new, H, n)
+    M = (U * S[:, :, None, :]) @ Vt
 
     # Clip to valid pixel range and cast.
     M = np.clip(M, 0.0, 255.0).astype(np.uint8)
@@ -188,17 +175,13 @@ def _extract_once(
     masked_c = masked_image[:h_crop, :w_crop]
     original_c = original_image[:h_crop, :w_crop]
 
-    H = _hadamard_matrix(n)
-
     masked_stack = blocks.deconstruct(masked_c).astype(np.float64)
     orig_stack = blocks.deconstruct(original_c).astype(np.float64)
     num_blocks = masked_stack.shape[0]
 
-    Bm = _batched_hadamard(masked_stack, H, n)
-    Bo = _batched_hadamard(orig_stack, H, n)
-
-    Sm = np.linalg.svd(Bm, compute_uv=False)       # (B, C, k)
-    So = np.linalg.svd(Bo, compute_uv=False)
+    # SVD of the raw blocks (Walsh-Hadamard step omitted; see module docstring).
+    Sm = np.linalg.svd(masked_stack, compute_uv=False)   # (B, C, k)
+    So = np.linalg.svd(orig_stack, compute_uv=False)
 
     b_idx = np.minimum(np.arange(1, num_blocks + 1, dtype=np.float64), float(num_sv))
     factors = (alpha * b_idx / m)

@@ -13,7 +13,7 @@ class MarkingModuleService implements WatermarkingServiceInterface
         $this->http = new Client(['timeout' => 60]);
     }
 
-    public function engrave(string $imageContents, string $watermarkContents, float $alpha = 0.00005): string
+    public function engrave(string $imageContents, string $watermarkContents, float $alpha = 0.01): string
     {
         $response = $this->http->post("{$this->baseUrl}/engrave", [
             'multipart' => [
@@ -37,7 +37,7 @@ class MarkingModuleService implements WatermarkingServiceInterface
         return $response->getBody()->getContents();
     }
 
-    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents, float $alpha = 0.00005): ExtractionResult
+    public function extract(string $markedImageContents, string $originalImageContents, string $watermarkContents, float $alpha = 0.01): ExtractionResult
     {
         $response = $this->http->post("{$this->baseUrl}/extract", [
             'multipart' => [

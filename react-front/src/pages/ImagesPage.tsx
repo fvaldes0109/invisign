@@ -487,7 +487,7 @@ export function ImagesPage() {
         setEngraveTarget(null);
         setEngraveError('');
         setSelectedWatermarkId(null);
-        setEngraveAlpha(0.00005);
+        setEngraveAlpha(0.01);
     }
 
     async function handleEngrave() {

@@ -1,7 +1,7 @@
 """
-Block splitting / stitching for the SVD + Walsh-Hadamard watermarker.
+Block splitting / stitching for the SVD watermarker.
 
-The algorithm from the paper works on n×n blocks with n a power of two.
+The algorithm works on n×n blocks (the project uses n = 16).
 These helpers turn a (H, W, 3) BGR image into a (num_blocks, 3, n, n)
 array (and back) using pure NumPy strides — no Python-level loops.
 

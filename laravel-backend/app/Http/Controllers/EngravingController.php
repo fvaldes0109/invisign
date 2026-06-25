@@ -44,7 +44,7 @@ class EngravingController extends Controller
                 imageId:     $request->input('image_id'),
                 watermarkId: $request->input('watermark_id'),
                 userId:      $request->user()->id,
-                alpha:       (float) $request->input('alpha', 0.00005),
+                alpha:       (float) $request->input('alpha', 0.01),
             );
 
             return new EngravingResource($engraving);
