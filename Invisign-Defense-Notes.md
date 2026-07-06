@@ -199,6 +199,25 @@ invert exactly. Brightness/exposure ≈ 0 because they're global tone curves.
   (it covers only 90°/mirror); arbitrary rotation needs a registration/resync step — a
   known extension, and the report scopes geometry to the dihedral group.
 
+**Deep-dive: the non-surviving attacks — do they occur in leaks, and what's the fix?**
+The strongest framing exploits the non-blind setting: *the owner holds the original, so
+most failures can be undone by preprocessing the suspect image before extraction —
+without touching the watermarking core.*
+
+| Failure | Occurs in real leaks? | Mitigation | Cost |
+|---|---|---|---|
+| Brightness / exposure | Yes — auto-enhance, screenshots, filters | **Tone-normalize first**: histogram-match suspect → original, then extract | Cheap preprocessing |
+| Arbitrary rotation / scale / crop / perspective | Yes — screenshots, re-framing, photographing a screen | **Register first**: feature-based alignment (SIFT/ORB) suspect → original to restore block alignment | Standard technique; fits non-blind model |
+| Weak overall margin | — | Raise α (per-region/adaptive to stay invisible) | Trades invisibility |
+| Collusion (recipients average copies) | Rare — needs coordination — but the classic forensic attack | **Coded serial marks + anti-collusion codes (Tardos)** | Real redesign; roadmap |
+
+The honest line: *"Because the owner holds the master, tone shifts and geometry can be
+neutralized by normalizing and registering the suspect against the original before
+extraction — a preprocessing front-end, not a change to the core."* Only **collusion**
+truly can't be preprocessed away (needs coded marks), and **extreme information loss**
+(tiny crops, brutal re-quantization) can sink recovery below the noise floor regardless —
+at that point it's a detection-threshold decision.
+
 ---
 
 ### Slide 10 — Why not just paste the mark on? (baselines)
@@ -220,6 +239,13 @@ are always lossy. LSB is weakest (blind → can't subtract the cover, no resync)
   that survives the real channel.
 - *Why is LSB so weak?* — It's blind: no original to subtract, so any value change wipes
   it, and it has no geometric resync.
+- *Why do additive/LSB lifts reach ~1.0 but SVD tops out near ~0.44?* — Max lift = 1 −
+  the method's own control floor. Additive/LSB extract nothing watermark-shaped from an
+  unmarked image (floor ≈ 0, ceiling ≈ 1.0); SVD's extraction rebuilds a watermark-shaped
+  output by construction (floor ≈ 0.49, ceiling ≈ 0.51). So SVD's clean +0.441 is **~87%
+  of its possible maximum** — and normalized by ceiling, its lossy-attack lead *grows*
+  (noise ~63% of ceiling vs. additive's ~13%). The raw table, if anything, understates
+  SVD's advantage.
 
 ---
 
@@ -300,7 +326,9 @@ did you build / contribute?"
 ---
 
 ### Slide 17 — Thank you / Q&A
-**The point:** Open the floor confidently. Repo + live site on screen.
+**The point:** Open the floor confidently. Repo + live site on screen, and a **QR code
+that goes straight to invisign.com** — invite the committee to scan it and try the live
+product during Q&A.
 
 ---
 

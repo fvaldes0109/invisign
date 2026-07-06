@@ -1,6 +1,6 @@
 # Market & Competitor Analysis
 
-This complements **[Report.md](Report.md)**, which establishes the technical method and its honest positioning: an invisible, non-blind, still-image watermark whose natural home is **owner-held forensic tracing** (identifying which recipient leaked a copy), not contested ownership proof. This document situates that positioning in the commercial landscape. Sizing here is **qualitative** by choice: drivers and segments rather than dollar figures.
+This complements the project report, which establishes the technical method and its honest positioning: an invisible, non-blind, still-image watermark whose natural home is **owner-held forensic tracing** (identifying which recipient leaked a copy), not contested ownership proof. This document situates that positioning in the commercial landscape. Sizing here is **qualitative** by choice: drivers and segments rather than dollar figures.
 
 ## Market overview
 

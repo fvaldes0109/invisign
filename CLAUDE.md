@@ -4,7 +4,7 @@
 
 The idea and explanation of the algorithm is on ./algorithm.pdf
 
-The capstone report is **[Report.md](Report.md)** — problem/relevance, the USC-SIPI dataset, metrics, the experimental analysis (Additive/LSB/SVD baseline comparison, NCC *lift over a zero-embedding control*, imperceptibility), the threat model / use cases, and the rationale for design decisions (e.g. why the Walsh-Hadamard transform was removed and why the default embedding strength is α = 0.01). Read it when reasoning about the method's behaviour, results, or limitations.
+The capstone report is **[Report.md](Report.md)** — problem/relevance, the USC-SIPI dataset, metrics, the experimental analysis (Additive/LSB/SVD baseline comparison, NCC *lift over a zero-embedding control*, imperceptibility), the honest scope (owner-held forensic tracing vs. ownership proof, under *Usage*), and the rationale for design decisions (e.g. why the Walsh-Hadamard transform was removed and why the default embedding strength is α = 0.01). Its section structure follows the course's `Report template.pdf` — keep those headings when editing. Read it when reasoning about the method's behaviour, results, or limitations.
 
 The market and competitor analysis is **[Market.md](Market.md)** — qualitative market segments/drivers, the direct competitors (IMATAG, Digimarc, Verimatrix/NexGuard), the adjacent AI-provenance players (C2PA, SynthID), and where the project fits. Read it when reasoning about commercial positioning or competitors.
 
