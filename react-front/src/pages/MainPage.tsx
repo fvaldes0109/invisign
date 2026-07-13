@@ -27,8 +27,7 @@ const colors = {
 type StyleFunction =
     | ((color: string) => React.CSSProperties)
     | ((from: string, to: string) => React.CSSProperties)
-    | ((pct: number, color: string) => React.CSSProperties)
-    | ((pass: boolean) => React.CSSProperties);
+    | ((pct: number, color: string) => React.CSSProperties);
 
 type StyleMap = Record<string, React.CSSProperties | StyleFunction>;
 
@@ -533,39 +532,43 @@ const styles = {
         flexDirection: 'column' as const,
         gap: '0.75rem',
     },
-    attackItem: (_pass: boolean): React.CSSProperties => ({
+    attackItem: {
         display: 'flex',
         alignItems: 'center',
         gap: '0.9rem',
         padding: '1rem 1.25rem',
         borderRadius: 12,
-        background: colors.surface,
-        border: `1px solid ${colors.border}`,
+        background: 'rgba(16,185,129,0.06)',
+        border: `1px solid rgba(16,185,129,0.22)`,
         transition: 'border-color 0.2s, transform 0.2s',
-    }),
-    attackIcon: (pass: boolean): React.CSSProperties => ({
+    },
+    attackIcon: {
         width: 28,
         height: 28,
         borderRadius: '50%',
-        background: pass ? `rgba(16,185,129,0.15)` : `rgba(239,68,68,0.15)`,
+        background: `rgba(16,185,129,0.15)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontSize: '0.75rem',
         flexShrink: 0,
-    }),
+    },
     attackLabel: {
         fontSize: '0.9rem',
         color: colors.text,
         fontWeight: 500,
     },
-    attackStatus: (pass: boolean): React.CSSProperties => ({
+    attackDetail: {
+        fontSize: '0.74rem',
+        color: colors.textDim,
+    },
+    attackStatus: {
         marginLeft: 'auto',
         fontSize: '0.72rem',
         fontWeight: 700,
-        color: pass ? colors.success : '#EF4444',
+        color: colors.success,
         letterSpacing: '0.04em',
-    }),
+    },
     resistText: {
         display: 'flex',
         flexDirection: 'column' as const,
@@ -669,15 +672,15 @@ const styles = {
     },
 } satisfies StyleMap;
 
+// Results from the capstone report: robustness battery over 39 USC-SIPI covers
+// at the invisible default strength (α = 0.01, ~51 dB PSNR).
 const attacks = [
-    { label: 'Rotate',            pass: true },
-    { label: 'Mirror',            pass: true },
-    { label: 'Gaussian Noise',    pass: true },
-    { label: 'Brightness',        pass: true },
-    { label: 'JPEG Compression',  pass: true },
-    { label: 'Exposition',        pass: true },
-    { label: 'Blur',              pass: true },
-    { label: 'Pixelate',          pass: true },
+    { label: 'Rotation',          detail: 'Undone exactly — recovery as on a clean image (NCC 0.93)' },
+    { label: 'Mirror',            detail: 'Undone exactly — recovery as on a clean image (NCC 0.93)' },
+    { label: 'JPEG Compression',  detail: 'Quality 20 — mark recovered at NCC 0.86' },
+    { label: 'Blur',              detail: 'Gaussian, radius 5 — mark recovered at NCC 0.84' },
+    { label: 'Gaussian Noise',    detail: 'Heavy noise (std 25) — mark recovered at NCC 0.81' },
+    { label: 'Pixelate',          detail: '8×8 blocks — mark recovered at NCC 0.64' },
 ];
 
 const features = [
@@ -691,7 +694,7 @@ const features = [
         icon: '🛡️',
         color: colors.accent,
         title: 'Survives Real-world Edits',
-        desc: 'Compression, rotation, noise, blur, brightness changes, the mark holds up. Even a degraded or re-exported copy can still be verified.',
+        desc: 'JPEG compression, rotation, mirroring, noise, blur, pixelation — the mark holds up under exactly the lossy processing a re-uploaded image suffers. Even a degraded or re-exported copy can still be verified.',
     },
     {
         icon: '⚡',
@@ -788,7 +791,7 @@ export function MainPage() {
                 }
                 @keyframes progressGrow {
                     from { width: 0%; }
-                    to   { width: 96%; }
+                    to   { width: 93%; }
                 }
                 @keyframes slideInLeft {
                     from { opacity: 0; transform: translateX(-36px); }
@@ -917,7 +920,7 @@ export function MainPage() {
                             <span style={styles.heroStatLabel}>Visually identical</span>
                         </div>
                         <div style={styles.heroStat}>
-                            <span style={styles.heroStatValue}>8+</span>
+                            <span style={styles.heroStatValue}>6</span>
                             <span style={styles.heroStatLabel}>Attack types survived</span>
                         </div>
                         <div style={styles.heroStat}>
@@ -960,11 +963,11 @@ export function MainPage() {
                             <div>
                                 <div style={{ ...styles.heroCardRow, marginBottom: '0.4rem' }}>
                                     <span style={styles.heroCardLabel}>Recovery confidence</span>
-                                    <span style={styles.heroCardVal(colors.accent)}>96%</span>
+                                    <span style={styles.heroCardVal(colors.accent)}>93%</span>
                                 </div>
                                 <div style={styles.progressBar}>
                                     <div style={{
-                                        ...styles.progressFill(96, `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`),
+                                        ...styles.progressFill(93, `linear-gradient(90deg, ${colors.primary}, ${colors.accent})`),
                                         animation: 'progressGrow 1.4s 0.9s ease both',
                                     }} />
                                 </div>
@@ -1015,7 +1018,7 @@ export function MainPage() {
                     <h2 style={styles.sectionTitle}>How it works</h2>
                     <p style={styles.sectionSub}>
                         Four steps from upload to verified ownership, the algorithm handles
-                        all the frequency-domain maths automatically.
+                        all the singular-value maths automatically.
                     </p>
 
                     <div ref={stepsRef} style={styles.stepsGrid}>
@@ -1138,7 +1141,13 @@ export function MainPage() {
             <div style={{ ...styles.resistSection, padding: isMobile ? '3rem 5%' : '6rem 6%' }}>
                 <div style={styles.resistInner}>
                     <div style={styles.sectionLabel}>Robustness</div>
-                    <h2 style={styles.sectionTitle}>Tested against eight real-world attacks</h2>
+                    <h2 style={styles.sectionTitle}>Tested against real-world attacks</h2>
+                    <p style={{ ...styles.sectionSub, marginBottom: 0 }}>
+                        Benchmarked on 39 standard test images, each watermarked at the
+                        invisible default strength, attacked, and re-extracted. The mark
+                        survives everything a web re-upload does to an image — re-compression,
+                        blur, noise, resampling, and any rotation or flip.
+                    </p>
 
                     <div style={{ ...styles.resistGrid, gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? '2rem' : '4rem' }}>
                         {/* Attack list */}
@@ -1147,24 +1156,23 @@ export function MainPage() {
                                 <div
                                     key={a.label}
                                     style={{
-                                        ...styles.attackItem(a.pass),
+                                        ...styles.attackItem,
                                         transform: hoveredAttack === i ? 'translateX(4px)' : 'translateX(0)',
                                         borderColor: hoveredAttack === i
-                                            ? (a.pass ? `rgba(16,185,129,0.4)` : `rgba(239,68,68,0.4)`)
-                                            : colors.border,
+                                            ? `rgba(16,185,129,0.45)`
+                                            : `rgba(16,185,129,0.22)`,
                                         opacity: attacksInView ? undefined : 0,
                                         animation: attacksInView ? `slideInLeft 0.5s ${i * 0.07}s ease both` : undefined,
                                     }}
                                     onMouseEnter={() => setHoveredAttack(i)}
                                     onMouseLeave={() => setHoveredAttack(null)}
                                 >
-                                    <div style={styles.attackIcon(a.pass)}>
-                                        {a.pass ? '✓' : '✗'}
+                                    <div style={styles.attackIcon}>✓</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={styles.attackLabel}>{a.label}</span>
+                                        <span style={styles.attackDetail}>{a.detail}</span>
                                     </div>
-                                    <span style={styles.attackLabel}>{a.label}</span>
-                                    <span style={styles.attackStatus(a.pass)}>
-                                        {a.pass ? 'MARK SURVIVES' : 'MARK LOST'}
-                                    </span>
+                                    <span style={styles.attackStatus}>MARK SURVIVES</span>
                                 </div>
                             ))}
                         </div>
@@ -1174,18 +1182,18 @@ export function MainPage() {
                             {[
                                 {
                                     icon: '🧮',
-                                    title: 'Hidden in the frequency domain',
-                                    desc: 'The mark is embedded in how pixel intensities vary across the image, not in the pixels themselves. Changes at this level are invisible to the eye but survive most edits.',
+                                    title: 'Hidden in the image\'s core structure',
+                                    desc: 'The image is split into small blocks and the mark is encoded into each block\'s strongest numerical component — the part that carries the block\'s essential structure, not individual pixels.',
                                 },
                                 {
-                                    icon: '🔢',
-                                    title: 'Mathematically encoded',
-                                    desc: 'Your watermark\'s visual structure is broken down into numerical components and encoded into the image. Extraction reverses this process to reconstruct the original mark.',
+                                    icon: '🗜️',
+                                    title: 'Built to survive lossy processing',
+                                    desc: 'Compression, blur, noise and pixelation preserve exactly that core structure. The mark rides through aggressive JPEG re-encoding, heavy blur and strong noise — the distortions a leaked image actually suffers when it is re-uploaded to the web.',
                                 },
                                 {
                                     icon: '🔁',
-                                    title: 'Spread across the whole image',
-                                    desc: 'The mark is distributed across every region of the photo. Even if part of the image is cropped, compressed, or distorted, enough of the mark remains to recover and verify it.',
+                                    title: 'Rotation and mirroring cost nothing',
+                                    desc: 'Extraction tries every rotation and flip of the image and keeps the best match, so geometric edits are undone exactly — recovery is identical to an untouched copy.',
                                 },
                             ].map((item, i) => (
                                 <div
